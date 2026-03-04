@@ -1,0 +1,24 @@
+disabled_rules:
+  - trailing_whitespace
+  - todo
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - sorted_imports
+
+line_length:
+  warning: 400
+  error: 500
+
+type_name:
+  min_length: 3
+  max_length: 40
+
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+    - vm
+
+reporter: "xcode"
