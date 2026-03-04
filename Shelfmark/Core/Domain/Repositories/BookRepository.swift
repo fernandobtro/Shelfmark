@@ -8,8 +8,10 @@
 import Foundation
 
 protocol BookRepositoryProtocol {
-    func saveBook() async throws
-    func fetchAllBooks() async throws -> [Book]
-    func fetchSingleBook() async throws -> Book
-    
+    func save(_ book: Book) async throws
+    func fetchAll() async throws -> [Book]
+    func fetchBook(by id: UUID) async throws -> Book?
+    func fetchBooks(byAuthorId id: UUID) async throws -> [Book]
+    func fetchBooks(byPublisherId id: UUID) async throws -> [Book]
+    func delete(by bookId: UUID) async throws
 }

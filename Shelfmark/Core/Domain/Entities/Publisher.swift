@@ -7,9 +7,7 @@
 
 import Foundation
 
-struct Publisher {
+struct Publisher: Equatable {
     let id: UUID
     let name: String
-    let books: [Book]
-    let authors: [Author]
 }

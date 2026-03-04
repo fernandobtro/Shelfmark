@@ -7,8 +7,7 @@
 
 import Foundation
 
-struct Author {
+struct Author: Equatable {
     let id: UUID
     let name: String
-    let books: [Book]
 }
