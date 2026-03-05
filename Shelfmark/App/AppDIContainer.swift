@@ -74,4 +74,12 @@ extension AppDIContainer {
     func makeAddBookView() -> AddEditBookView {
         AddEditBookView(viewModel: makeAddEditBookViewModel(mode: .add))
     }
+
+    @MainActor
+    func makeBookDetailViewModel(bookId: UUID) -> BookDetailViewModel {
+        BookDetailViewModel(
+            bookId: bookId,
+            fetchBookDetailUseCase: fetchBookDetailUseCase
+        )
+    }
 }
