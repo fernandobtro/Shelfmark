@@ -6,12 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct ShelfmarkApp: App {
+    @State private var container = AppDIContainer()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView(container: container)
+                .modelContainer(container.modelContainer)
         }
     }
 }

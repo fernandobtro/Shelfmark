@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    let container: AppDIContainer
+    
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -20,5 +22,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(container: AppDIContainer())
 }
