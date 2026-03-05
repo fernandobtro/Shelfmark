@@ -8,36 +8,63 @@
 import SwiftUI
 
 struct RootView: View {
-    
     let container: AppDIContainer
     @StateObject private var libraryViewModel: LibraryViewModel
+    @State private var selectedTab: TabBar = .library
     @State private var isPresentingAddBook = false
-    
+
     init(container: AppDIContainer) {
         self.container = container
-        _libraryViewModel = StateObject(wrappedValue: LibraryViewModel(fetchLibraryUseCase: container.fetchLibraryUseCase, deleteBookUseCase: container.deleteBookUseCase))
+        _libraryViewModel = StateObject(wrappedValue: container.makeLibraryViewModel())
     }
-    
+
     var body: some View {
-        NavigationStack {
-            LibraryView(viewModel: libraryViewModel)
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            isPresentingAddBook = true
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                    }
-                }
+        ZStack(alignment: .bottom) {
+            tabContent
+                .padding(.bottom, 80)
+            CustomTabBar(selectedTab: $selectedTab, onPlusButtonTap: {
+                isPresentingAddBook = true
+            })
         }
         .sheet(isPresented: $isPresentingAddBook) {
-            AddEditBookView(
-                viewModel: AddEditBookViewModel(
-                    mode: .add,
-                    saveBookUseCase: container.saveBookUseCase
-                )
-            )
+            container.makeAddBookView()
+        }
+    }
+
+    @ViewBuilder
+    private var tabContent: some View {
+        switch selectedTab {
+        case .library:
+            NavigationStack {
+                LibraryView(viewModel: libraryViewModel)
+                    .toolbar {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button {
+                                isPresentingAddBook = true
+                            } label: {
+                                Image(systemName: "plus")
+                            }
+                        }
+                    }
+            }
+
+        case .lists:
+            NavigationStack {
+                Text("Listas")
+                    .navigationTitle(TabBar.lists.title)
+            }
+
+        case .quotes:
+            NavigationStack {
+                Text("Citas")
+                    .navigationTitle(TabBar.quotes.title)
+            }
+
+        case .profile:
+            NavigationStack {
+                Text("Perfil")
+                    .navigationTitle(TabBar.profile.title)
+            }
         }
     }
 }

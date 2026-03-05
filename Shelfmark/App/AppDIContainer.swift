@@ -50,3 +50,28 @@ final class AppDIContainer {
         }
     }
 }
+
+// MARK: - ViewModel Factories
+
+extension AppDIContainer {
+    @MainActor
+    func makeLibraryViewModel() -> LibraryViewModel {
+        LibraryViewModel(
+            fetchLibraryUseCase: fetchLibraryUseCase,
+            deleteBookUseCase: deleteBookUseCase
+        )
+    }
+
+    @MainActor
+    func makeAddEditBookViewModel(mode: AddEditBookMode) -> AddEditBookViewModel {
+        AddEditBookViewModel(
+            mode: mode,
+            saveBookUseCase: saveBookUseCase
+        )
+    }
+
+    @MainActor
+    func makeAddBookView() -> AddEditBookView {
+        AddEditBookView(viewModel: makeAddEditBookViewModel(mode: .add))
+    }
+}
