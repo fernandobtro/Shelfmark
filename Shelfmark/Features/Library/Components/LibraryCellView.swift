@@ -8,11 +8,6 @@
 import Foundation
 import SwiftUI
 
-// MARK: - Instrucciones (qué hace esta celda)
-// 1. Esta vista representa UNA tarjeta de libro como en el mock: portada arriba, título y autor debajo.
-// 2. La idea es que LibraryGridView cree muchas LibraryCellView(book:) dentro de un LazyVGrid para formar el grid.
-// 3. Si quieres ajustar el estilo (tamaños de letra, sombras, colores), hazlo solo aquí; el grid no debería saber de diseño de la tarjeta.
-
 struct LibraryCellView: View {
     let book: Book
 
@@ -21,8 +16,8 @@ struct LibraryCellView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Portada
+        VStack(alignment: .center, spacing: 8) {
+            // Portada: ancho = columna del grid; altura por 2:3 (proporción conservada)
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color(.systemGray6))
@@ -51,25 +46,25 @@ struct LibraryCellView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .aspectRatio(2/3, contentMode: .fit) // relación de portada de libro
+            .aspectRatio(2/3, contentMode: .fit)
             .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
 
-            // Título
+            // Título y autor centrados
             Text(book.title)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(2)
-                .multilineTextAlignment(.leading)
+                .multilineTextAlignment(.center)
 
-            // Autor(es)
             if !authorsText.isEmpty {
                 Text(authorsText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .multilineTextAlignment(.leading)
+                    .multilineTextAlignment(.center)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 }
 

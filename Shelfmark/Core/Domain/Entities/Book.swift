@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Book: Equatable {
+struct Book: Equatable, Identifiable {
     let id: UUID
     let isbn: String
     let authors: [Author]
@@ -24,9 +24,18 @@ struct Book: Equatable {
 }
 
 /// SwiftData no persiste enums personalizados. Usamos String como rawValue para guardar en BookEntity.
-enum ReadingStatus: String {
+enum ReadingStatus: String, CaseIterable {
     case pending = "pending"
     case reading = "reading"
     case read = "read"
     case none = "none"
+
+    var displayName: String {
+        switch self {
+        case .pending: return "Pendiente"
+        case .reading: return "Leyendo"
+        case .read: return "Leído"
+        case .none: return "Ninguno"
+        }
+    }
 }

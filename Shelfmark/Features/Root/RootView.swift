@@ -8,23 +8,32 @@
 import SwiftUI
 
 struct RootView: View {
+    
     let container: AppDIContainer
+    
     @StateObject private var libraryViewModel: LibraryViewModel
     @State private var selectedTab: TabBar = .library
     @State private var isPresentingAddBook = false
 
     init(container: AppDIContainer) {
         self.container = container
-        _libraryViewModel = StateObject(wrappedValue: container.makeLibraryViewModel())
+        _libraryViewModel = StateObject(
+            wrappedValue: container.makeLibraryViewModel()
+        )
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            
             tabContent
                 .padding(.bottom, 80)
-            CustomTabBar(selectedTab: $selectedTab, onPlusButtonTap: {
-                isPresentingAddBook = true
-            })
+            
+            CustomTabBar(
+                selectedTab: $selectedTab,
+                onPlusButtonTap: {
+                    isPresentingAddBook = true
+                }
+            )
         }
         .sheet(isPresented: $isPresentingAddBook) {
             container.makeAddBookView()
@@ -33,35 +42,42 @@ struct RootView: View {
 
     @ViewBuilder
     private var tabContent: some View {
+        
         switch selectedTab {
+            
         case .library:
+            
             NavigationStack {
                 LibraryView(viewModel: libraryViewModel)
-                    // 1. Añade .navigationDestination(for: UUID.self) { bookId in ... }. Dentro del closure, crea el ViewModel con container.makeBookDetailViewModel(bookId: bookId) y presenta BookDetailView(viewModel: eseViewModel). Así, cuando en LibraryView uses NavigationLink(value: book.id), esta destination se encargará de mostrar el detalle. No hace falta inyectar nada más; el container ya tiene makeBookDetailViewModel(bookId:).
-                    .toolbar {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button {
-                                isPresentingAddBook = true
-                            } label: {
-                                Image(systemName: "plus")
-                            }
-                        }
+                    .navigationDestination(for: UUID.self) { bookId in
+                        
+                        let viewModel = container.makeBookDetailViewModel(
+                            bookId: bookId
+                        )
+                        
+                        BookDetailView(
+                            viewModel: viewModel,
+                            container: container
+                        )
                     }
             }
 
         case .lists:
+            
             NavigationStack {
                 Text("Listas")
                     .navigationTitle(TabBar.lists.title)
             }
 
         case .quotes:
+            
             NavigationStack {
                 Text("Citas")
                     .navigationTitle(TabBar.quotes.title)
             }
 
         case .profile:
+            
             NavigationStack {
                 Text("Perfil")
                     .navigationTitle(TabBar.profile.title)

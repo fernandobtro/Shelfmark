@@ -18,23 +18,7 @@ enum BookDetailState: Equatable {
 }
 
 final class BookDetailViewModel: ObservableObject {
-    /*
-     Tus requisitos (y dónde se resuelven):
-     1. "Recuperar la lista de libros desde SwiftData"
-        → En detalle no usamos la lista; recuperamos UN libro por id.
-        → Eso se hace en loadDetail(): llamamos al use case, que por debajo usa el repositorio (SwiftData).
-        → Ver comentario [RECUPERAR] en loadDetail().
-
-     2. "Mandar estos datos a la view para que los muestre"
-        → Los datos se exponen en el estado: state = .loaded(book).
-        → La view hace switch viewModel.state y en .loaded(let book) muestra título, autores, etc.
-        → Ver comentario [MANDAR A LA VIEW] en loadDetail().
-
-     3. "Recibir el UUID del libro para poder saber cual mostrar"
-        → El UUID se recibe en el init y se guarda en bookId.
-        → Ver comentario [RECIBIR UUID] en el init.
-     */
-
+    
     @Published var state: BookDetailState = .idle
 
     // [RECIBIR UUID] El id del libro que esta pantalla debe mostrar. Lo usa loadDetail() para pedirlo al use case.
@@ -44,6 +28,11 @@ final class BookDetailViewModel: ObservableObject {
     init(bookId: UUID, fetchBookDetailUseCase: FetchBookDetailUseCaseProtocol) {
         self.bookId = bookId
         self.fetchBookDetailUseCase = fetchBookDetailUseCase
+    }
+
+    var loadedBook: Book? {
+        guard case .loaded(let book) = state else { return nil }
+        return book
     }
 
     /// [RECUPERAR] Aquí se recupera el libro: el use case (que por debajo usa el repositorio → SwiftData) devuelve el Book con ese id.

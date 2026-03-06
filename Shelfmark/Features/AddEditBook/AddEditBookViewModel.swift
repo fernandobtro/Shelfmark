@@ -32,6 +32,8 @@ final class AddEditBookViewModel: ObservableObject {
     @Published var descriptionText: String
 
     // Estado de la pantalla
+    @Published var isFavorite: Bool
+    @Published var readingStatus: ReadingStatus
     @Published var isSaving = false
     @Published var errorMessage: String?
 
@@ -53,6 +55,8 @@ final class AddEditBookViewModel: ObservableObject {
             publicationDate = nil
             language = "es"
             descriptionText = ""
+            isFavorite = false
+            readingStatus = .none
 
         case .edit(let existing):
             title = existing.title
@@ -64,6 +68,8 @@ final class AddEditBookViewModel: ObservableObject {
             publicationDate = existing.publicationDate
             language = existing.language
             descriptionText = existing.bookDescription ?? ""
+            isFavorite = existing.isFavorite
+            readingStatus = existing.readingStatus
         }
     }
 
@@ -143,8 +149,8 @@ final class AddEditBookViewModel: ObservableObject {
             bookDescription: finalDescription,
             subtitle: finalSubtitle,
             language: language.isEmpty ? "es" : language,
-            isFavorite: false,
-            readingStatus: .none
+            isFavorite: isFavorite,
+            readingStatus: readingStatus
         )
     }
 

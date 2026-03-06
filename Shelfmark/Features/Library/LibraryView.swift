@@ -10,9 +10,6 @@ import Foundation
 
 struct LibraryView: View {
     
-    // El ViewModel viene inyectado desde fuera.
-    // ObservedObject porque la vista NO lo crea,
-    // solo observa cambios publicados.
     @ObservedObject var viewModel: LibraryViewModel
 
     var body: some View {
@@ -29,11 +26,6 @@ struct LibraryView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             case .loaded:
-                // Ya NO usamos directamente "books".
-                // Porque el ViewModel ya expone:
-                // viewModel.sectionedBooks
-                // que incluye:
-                // filtro + orden + agrupación
                 libraryContent()
 
             case .error(let message):
@@ -42,8 +34,6 @@ struct LibraryView: View {
         }
         .navigationTitle("Biblioteca")
 
-        // HEADER con filtros
-        // Aquí ponemos LibraryHeaderView
         .safeAreaInset(edge: .top) {
             LibraryHeaderView(viewModel: viewModel)
         }
@@ -58,10 +48,11 @@ struct LibraryView: View {
                 }
             }
         }
-
-        // SHEET con menú de orden
+        // SHEET con menú de orden (media altura, no pantalla completa)
         .sheet(isPresented: $viewModel.isShowingSortMenu) {
             LibrarySortMenuView(viewModel: viewModel)
+                .presentationDetents([.fraction(0.45)])
+                .presentationDragIndicator(.visible)
         }
 
         // Carga inicial

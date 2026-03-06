@@ -75,6 +75,13 @@ extension AppDIContainer {
         AddEditBookView(viewModel: makeAddEditBookViewModel(mode: .add))
     }
 
+    // MARK: - Botón Editar desde detalle (instrucciones)
+    // 1. Añade un método makeAddEditBookView(mode: AddEditBookMode) -> AddEditBookView que devuelva AddEditBookView(viewModel: makeAddEditBookViewModel(mode: mode)). Así desde BookDetailView podrás abrir el formulario en modo .edit(existing: book) usando el container.
+    @MainActor
+    func makeAddEditBookView(mode: AddEditBookMode) -> AddEditBookView {
+        AddEditBookView(viewModel: makeAddEditBookViewModel(mode: mode))
+    }
+
     @MainActor
     func makeBookDetailViewModel(bookId: UUID) -> BookDetailViewModel {
         BookDetailViewModel(

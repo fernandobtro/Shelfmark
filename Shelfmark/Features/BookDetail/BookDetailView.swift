@@ -7,9 +7,19 @@
 
 import SwiftUI
 
+// MARK: - Botón Editar (instrucciones)
+// 5. Añade la propiedad let container: AppDIContainer (la vista la recibe desde RootView).
+// 6. Añade @State private var bookToEdit: Book? para controlar el sheet de edición.
+// 7. En la toolbar, añade otro ToolbarItem con Button("Editar") que haga bookToEdit = viewModel.loadedBook. Deshabilita u oculta el botón cuando viewModel.loadedBook == nil.
+// 8. Añade .sheet(item: $bookToEdit) { book in container.makeAddEditBookView(mode: .edit(existing: book)) }. Para que .sheet(item:) funcione, Book debe conformar Identifiable (paso 3). Opcional: en onDismiss del sheet llama viewModel.loadDetail() para refrescar el detalle tras guardar.
+
 struct BookDetailView: View {
     @ObservedObject var viewModel: BookDetailViewModel
     @Environment(\.dismiss) private var dismiss
+    
+    let container: AppDIContainer
+    
+    @State private var bookToEdit: Book?
 
     var body: some View {
         Group {
@@ -33,6 +43,17 @@ struct BookDetailView: View {
                     dismiss()
                 }
             }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Editar") {
+                    bookToEdit = viewModel.loadedBook
+                }
+                .disabled(viewModel.loadedBook == nil)
+            }
+        }
+        .sheet(item: $bookToEdit, onDismiss: {
+            Task { await viewModel.loadDetail() }
+        }) { book in
+            container.makeAddEditBookView(mode: .edit(existing: book))
         }
         .task {
             await viewModel.loadDetail()
@@ -78,6 +99,20 @@ struct BookDetailView: View {
                     Text(description)
                 }
             }
+
+            Section("Mi biblioteca") {
+                LabeledContent("Favorito", value: book.isFavorite ? "Sí" : "No")
+                LabeledContent("Estado", value: readingStatusDisplayName(book.readingStatus))
+            }
+        }
+    }
+
+    private func readingStatusDisplayName(_ status: ReadingStatus) -> String {
+        switch status {
+        case .pending: return "Pendiente"
+        case .reading: return "Leyendo"
+        case .read: return "Leído"
+        case .none: return "Ninguno"
         }
     }
 
@@ -112,6 +147,9 @@ private struct MockFetchBookDetailUseCase: FetchBookDetailUseCaseProtocol {
 }
 
 #Preview("Con libro") {
+
+    let container = AppDIContainer()
+
     let sampleBook = Book(
         id: UUID(),
         isbn: "978-84-206-4750-0",
@@ -127,27 +165,40 @@ private struct MockFetchBookDetailUseCase: FetchBookDetailUseCaseProtocol {
         isFavorite: false,
         readingStatus: .none
     )
+
     NavigationStack {
         BookDetailView(
             viewModel: BookDetailViewModel(
                 bookId: sampleBook.id,
                 fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: sampleBook)
-            )
+            ),
+            container: container
         )
     }
 }
 
 #Preview("Cargando") {
+
+    let container = AppDIContainer()
+
     struct PreviewWrapper: View {
+
+        let container: AppDIContainer
+
         @StateObject private var viewModel = BookDetailViewModel(
             bookId: UUID(),
             fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: nil)
         )
+
         var body: some View {
             NavigationStack {
-                BookDetailView(viewModel: viewModel)
+                BookDetailView(
+                    viewModel: viewModel,
+                    container: container
+                )
             }
         }
     }
-    return PreviewWrapper()
+
+    return PreviewWrapper(container: container)
 }

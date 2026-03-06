@@ -47,6 +47,15 @@ struct AddEditBookView: View {
                         .lineLimit(3...6)
                 }
 
+                Section("Estado") {
+                    Toggle("Favorito", isOn: $viewModel.isFavorite)
+                    Picker("Estado", selection: $viewModel.readingStatus) {
+                        ForEach(ReadingStatus.allCases, id: \.self) { status in
+                            Text(status.displayName).tag(status)
+                        }
+                    }
+                }
+
                 if let error = viewModel.errorMessage {
                     Section {
                         Text(error)
