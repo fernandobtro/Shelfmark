@@ -23,7 +23,9 @@ enum BookPersistenceMapper {
             thumbnailURL: entity.thumbnailURL,
             bookDescription: entity.bookDescription,
             subtitle: entity.subtitle,
-            language: entity.language
+            language: entity.language,
+            isFavorite: entity.isFavorite,
+            readingStatus: ReadingStatus(rawValue: entity.readingStatusRaw) ?? .none
         )
     }
 
@@ -42,7 +44,9 @@ enum BookPersistenceMapper {
             thumbnailURL: book.thumbnailURL,
             bookDescription: book.bookDescription,
             subtitle: book.subtitle,
-            language: book.language
+            language: book.language,
+            isFavorite: book.isFavorite,
+            readingStatusRaw: book.readingStatus.rawValue
         )
     }
 }

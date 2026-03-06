@@ -19,4 +19,14 @@ struct Book: Equatable {
     let bookDescription: String?
     let subtitle: String?
     let language: String
+    let isFavorite: Bool
+    let readingStatus: ReadingStatus
+}
+
+/// SwiftData no persiste enums personalizados. Usamos String como rawValue para guardar en BookEntity.
+enum ReadingStatus: String {
+    case pending = "pending"
+    case reading = "reading"
+    case read = "read"
+    case none = "none"
 }

@@ -37,6 +37,7 @@ struct RootView: View {
         case .library:
             NavigationStack {
                 LibraryView(viewModel: libraryViewModel)
+                    // 1. Añade .navigationDestination(for: UUID.self) { bookId in ... }. Dentro del closure, crea el ViewModel con container.makeBookDetailViewModel(bookId: bookId) y presenta BookDetailView(viewModel: eseViewModel). Así, cuando en LibraryView uses NavigationLink(value: book.id), esta destination se encargará de mostrar el detalle. No hace falta inyectar nada más; el container ya tiene makeBookDetailViewModel(bookId:).
                     .toolbar {
                         ToolbarItem(placement: .primaryAction) {
                             Button {

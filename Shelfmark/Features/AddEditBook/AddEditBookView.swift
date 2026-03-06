@@ -104,9 +104,11 @@ private struct MockSaveBookUseCase: SaveBookUseCaseProtocol {
         thumbnailURL: nil,
         bookDescription: "Un clásico de la fantasía.",
         subtitle: "O ida y vuelta",
-        language: "es"
+        language: "es",
+        isFavorite: false,
+        readingStatus: .none
     )
-    return AddEditBookView(
+    AddEditBookView(
         viewModel: AddEditBookViewModel(
             mode: .edit(existing: sampleBook),
             saveBookUseCase: MockSaveBookUseCase()

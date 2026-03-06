@@ -23,6 +23,57 @@ enum LibraryState: Equatable {
 
 final class LibraryViewModel: ObservableObject {
     @Published var state: LibraryState = .idle
+    @Published var sortOption: SortOption = .title
+    @Published var groupOption: GroupOption = .none
+    @Published var isShowingSortMenu: Bool = false
+
+    // MARK: - Instrucciones (completa en orden)
+    // 1. ~~Añade @Published var sortOption: SortOption = .title y @Published var groupOption: GroupOption = .none.~~ Hecho.
+    // 2. Añade @Published var filterOption: FilterOption = .all (enum en LibraryModels). No hace falta inyectar nada nuevo; el filtro se aplica sobre los libros ya cargados.
+    
+    @Published var filterOption: FilterOption = .all
+    
+    // 3. sectionedBooks: [LibrarySection]. Computa a partir de state, filterOption, sortOption y groupOption.
+    //    Lógica:
+    //    (a) del state extrae [Book] (solo si .loaded),
+    //    (b) filtra por filterOption (de momento todos),
+    //    (c) ordena por sortOption (título o primer autor),
+    //    (d) agrupa según groupOption o devuelve una única sección "Todos".
+    var sectionedBooks: [LibrarySection] {
+        guard case .loaded(let books) = state else { return [] }
+
+        // (b) Filtro (por ahora: todos los libros; más adelante usaremos filterOption)
+        let filteredBooks = books.filter { _ in true }
+
+        // (c) Orden
+        let sortedBooks = filteredBooks.sorted { book1, book2 in
+            switch sortOption {
+            case .title:
+                return book1.title.localizedCaseInsensitiveCompare(book2.title) == .orderedAscending
+            case .author:
+                let author1 = book1.authors.first?.name ?? ""
+                let author2 = book2.authors.first?.name ?? ""
+                return author1.localizedCaseInsensitiveCompare(author2) == .orderedAscending
+            }
+        }
+
+        // (d) Agrupación
+        switch groupOption {
+        case .publisher:
+            let grouped = Dictionary(grouping: sortedBooks) { book in
+                book.publisher?.name ?? "Editorial desconocida"
+            }
+            return makeSections(from: grouped)
+        case .author:
+            let grouped = Dictionary(grouping: sortedBooks) { book in
+                book.authors.first?.name ?? "Autor desconocido"
+            }
+            return makeSections(from: grouped)
+        case .none:
+            return [LibrarySection(categoryName: "Todos", books: sortedBooks)]
+        }
+    }
+    // 4. Añade métodos para la vista: selectSort(_ option: SortOption), selectGroup(_ option: GroupOption), selectFilter(_ option: FilterOption). Solo asignan las @Published; no hace falta crear use cases.
 
     private let fetchLibraryUseCase: FetchLibraryUseCaseProtocol
     private let deleteBookUseCase: DeleteBookUseCaseProtocol
@@ -59,5 +110,28 @@ final class LibraryViewModel: ObservableObject {
                 state = .error(error.localizedDescription)
             }
         }
+    }
+
+    func selectSort(_ option: SortOption) {
+        sortOption = option
+    }
+
+    func selectGroup(_ option: GroupOption) {
+        groupOption = option
+    }
+
+    func selectFilter(_ option: FilterOption) {
+        filterOption = option
+    }
+
+    // MARK: - Helper
+    private func makeSections(from dictionary: [String: [Book]]) -> [LibrarySection] {
+        dictionary
+            .map { key, value in
+                LibrarySection(categoryName: key, books: value)
+            }
+            .sorted {
+                $0.categoryName.localizedCaseInsensitiveCompare($1.categoryName) == .orderedAscending
+            }
     }
 }

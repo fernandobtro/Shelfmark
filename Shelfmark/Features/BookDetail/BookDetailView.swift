@@ -123,9 +123,11 @@ private struct MockFetchBookDetailUseCase: FetchBookDetailUseCaseProtocol {
         thumbnailURL: nil,
         bookDescription: "Un clásico de la fantasía.",
         subtitle: "O ida y vuelta",
-        language: "es"
+        language: "es",
+        isFavorite: false,
+        readingStatus: .none
     )
-    return NavigationStack {
+    NavigationStack {
         BookDetailView(
             viewModel: BookDetailViewModel(
                 bookId: sampleBook.id,

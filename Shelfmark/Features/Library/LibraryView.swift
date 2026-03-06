@@ -6,93 +6,130 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct LibraryView: View {
+    
+    // El ViewModel viene inyectado desde fuera.
+    // ObservedObject porque la vista NO lo crea,
+    // solo observa cambios publicados.
     @ObservedObject var viewModel: LibraryViewModel
 
     var body: some View {
         Group {
             switch viewModel.state {
+
             case .idle:
+                // Estado inicial antes de cargar.
                 Color.clear
+
             case .loading:
+                // Indicador de carga mientras fetchLibraryUseCase corre.
                 ProgressView("Cargando biblioteca…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            case .loaded(let books):
-                libraryList(books: books)
+
+            case .loaded:
+                // Ya NO usamos directamente "books".
+                // Porque el ViewModel ya expone:
+                // viewModel.sectionedBooks
+                // que incluye:
+                // filtro + orden + agrupación
+                libraryContent()
+
             case .error(let message):
                 errorView(message: message)
             }
         }
         .navigationTitle("Biblioteca")
+
+        // HEADER con filtros
+        // Aquí ponemos LibraryHeaderView
+        .safeAreaInset(edge: .top) {
+            LibraryHeaderView(viewModel: viewModel)
+        }
+
+        // BOTÓN DE ORDENAR
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    viewModel.isShowingSortMenu = true
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down")
+                }
+            }
+        }
+
+        // SHEET con menú de orden
+        .sheet(isPresented: $viewModel.isShowingSortMenu) {
+            LibrarySortMenuView(viewModel: viewModel)
+        }
+
+        // Carga inicial
         .task {
             await viewModel.loadLibrary()
         }
     }
 
-    private func libraryList(books: [Book]) -> some View {
-        Group {
-            if books.isEmpty {
-                ContentUnavailableView(
-                    "Sin libros",
-                    systemImage: "book.closed",
-                    description: Text("Añade tu primer libro desde el escáner o el formulario.")
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List {
-                    ForEach(books, id: \.id) { book in
-                        libraryRow(book: book)
-                    }
-                    .onDelete(perform: deleteBooks)
+    // MARK: - Contenido principal de la biblioteca
+    
+    @ViewBuilder
+    private func libraryContent() -> some View {
+
+            // Si no hay libros después de aplicar filtros
+            if viewModel.sectionedBooks.isEmpty {
+
+                VStack(spacing: 16) {
+                    Image(systemName: "book.closed")
+                        .font(.largeTitle)
+                        .foregroundStyle(.secondary)
+
+                    Text("Sin libros")
+                        .font(.headline)
+
+                    Text("Añade tu primer libro desde el escáner o el formulario.")
+                        .font(.subheadline)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            } else {
+
+                // Vista real de la biblioteca
+                // Recibe secciones ya preparadas por el ViewModel
+                LibraryGridView(
+                    sections: viewModel.sectionedBooks,
+                    onDelete: { bookId in
+                        Task { await viewModel.delete(bookId: bookId) }
+                    }
+                )
+
             }
-        }
     }
 
-    private func libraryRow(book: Book) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(book.title)
-                .font(.headline)
-            if !book.authors.isEmpty {
-                Text(book.authors.map(\.name).joined(separator: ", "))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-
-    private func deleteBooks(at offsets: IndexSet) {
-        guard case .loaded(let books) = viewModel.state else { return }
-        for index in offsets {
-            let book = books[index]
-            Task {
-                await viewModel.delete(bookId: book.id)
-            }
-        }
-    }
+    // MARK: - Error
 
     private func errorView(message: String) -> some View {
         VStack(spacing: 16) {
+
             Image(systemName: "exclamationmark.triangle")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
+
             Text(message)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
+
             Button("Reintentar") {
                 Task {
                     await viewModel.loadLibrary()
                 }
             }
-            .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
     }
 }
-
 // MARK: - Preview (mocks solo para previsualización)
 
 private struct MockFetchLibraryUseCase: FetchLibraryUseCaseProtocol {
@@ -109,7 +146,9 @@ private struct MockFetchLibraryUseCase: FetchLibraryUseCaseProtocol {
                 thumbnailURL: nil,
                 bookDescription: nil,
                 subtitle: nil,
-                language: "es"
+                language: "es",
+                isFavorite: false,
+                readingStatus: .none
             )
         ]
     }

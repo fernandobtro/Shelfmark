@@ -142,7 +142,9 @@ final class AddEditBookViewModel: ObservableObject {
             thumbnailURL: nil,
             bookDescription: finalDescription,
             subtitle: finalSubtitle,
-            language: language.isEmpty ? "es" : language
+            language: language.isEmpty ? "es" : language,
+            isFavorite: false,
+            readingStatus: .none
         )
     }
 
