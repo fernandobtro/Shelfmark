@@ -40,7 +40,7 @@ struct CustomTabBar: View {
         Button(action: onPlusButtonTap) {
             ZStack {
                 Circle()
-                    .fill(Color.green.opacity(0.9))
+                    .fill(Color.primaryGreen.opacity(0.9))
                     .frame(width: 62, height: 62)
                     .shadow(color: .green.opacity(0.3), radius: 8, x: 0, y: 4)
                 
@@ -62,7 +62,7 @@ struct CustomTabBar: View {
                 Text(tab.title)
                     .font(.system(size: 10, weight: .medium))
             }
-            .foregroundStyle(selectedTab == tab ? .green: .secondary)
+            .foregroundStyle(selectedTab == tab ? .primaryGreen: .secondary)
             .frame(maxWidth: .infinity)
         }
     }

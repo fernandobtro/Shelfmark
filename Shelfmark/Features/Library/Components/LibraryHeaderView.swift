@@ -7,9 +7,10 @@
 
 import Foundation
 import SwiftUI
+import Observation
 
 struct LibraryHeaderView: View {
-    @ObservedObject var viewModel: LibraryViewModel
+    @Bindable var viewModel: LibraryViewModel
     
     var body: some View {
         HStack(spacing: 8) {
@@ -20,8 +21,6 @@ struct LibraryHeaderView: View {
         .padding(.horizontal)
     }
 }
-
-// MARK: - Helper views
 
 private extension LibraryHeaderView {
     func filterButton(_ option: FilterOption) -> some View {
@@ -45,3 +44,4 @@ private extension LibraryHeaderView {
         .buttonStyle(PlainButtonStyle())
     }
 }
+

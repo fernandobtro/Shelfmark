@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import Observation
 
 struct AddEditBookView: View {
-    @ObservedObject var viewModel: AddEditBookViewModel
+    @Bindable var viewModel: AddEditBookViewModel
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -86,41 +87,3 @@ struct AddEditBookView: View {
     }
 }
 
-// MARK: - Preview
-
-private struct MockSaveBookUseCase: SaveBookUseCaseProtocol {
-    func execute(_ book: Book) async throws {}
-}
-
-#Preview("Añadir libro") {
-    AddEditBookView(
-        viewModel: AddEditBookViewModel(
-            mode: .add,
-            saveBookUseCase: MockSaveBookUseCase()
-        )
-    )
-}
-
-#Preview("Editar libro") {
-    let sampleBook = Book(
-        id: UUID(),
-        isbn: "978-84-206-4750-0",
-        authors: [Author(id: UUID(), name: "J.R.R. Tolkien")],
-        title: "El Hobbit",
-        numberOfPages: 366,
-        publisher: Publisher(id: UUID(), name: "Minotauro"),
-        publicationDate: Date(),
-        thumbnailURL: nil,
-        bookDescription: "Un clásico de la fantasía.",
-        subtitle: "O ida y vuelta",
-        language: "es",
-        isFavorite: false,
-        readingStatus: .none
-    )
-    AddEditBookView(
-        viewModel: AddEditBookViewModel(
-            mode: .edit(existing: sampleBook),
-            saveBookUseCase: MockSaveBookUseCase()
-        )
-    )
-}

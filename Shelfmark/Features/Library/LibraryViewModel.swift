@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 /// Los únicos estados posibles de la pantalla de biblioteca.
 /// La pantalla está siempre en uno solo; no puede estar "cargando" y "con datos" a la vez.
@@ -21,17 +21,18 @@ enum LibraryState: Equatable {
     case error(String)
 }
 
-final class LibraryViewModel: ObservableObject {
-    @Published var state: LibraryState = .idle
-    @Published var sortOption: SortOption = .title
-    @Published var groupOption: GroupOption = .none
-    @Published var isShowingSortMenu: Bool = false
-    @Published var filterOption: FilterOption = .all
+@Observable
+final class LibraryViewModel {
+    var state: LibraryState = .idle
+    var sortOption: SortOption = .title
+    var groupOption: GroupOption = .none
+    var isShowingSortMenu: Bool = false
+    var filterOption: FilterOption = .all
     
     var sectionedBooks: [LibrarySection] {
         guard case .loaded(let books) = state else { return [] }
 
-            let filteredBooks = books.filter { book in
+        let filteredBooks = books.filter { book in
             switch filterOption {
             case .all:
                 return true
@@ -42,8 +43,6 @@ final class LibraryViewModel: ObservableObject {
             }
         }
         
-
-        // (c) Orden
         let sortedBooks = filteredBooks.sorted { book1, book2 in
             switch sortOption {
             case .title:
@@ -55,7 +54,6 @@ final class LibraryViewModel: ObservableObject {
             }
         }
 
-        // (d) Agrupación
         switch groupOption {
         case .publisher:
             let grouped = Dictionary(grouping: sortedBooks) { book in
@@ -80,8 +78,6 @@ final class LibraryViewModel: ObservableObject {
         self.deleteBookUseCase = deleteBookUseCase
     }
 
-    /// Carga la lista de libros. Actualiza `state` a .loading, luego .loaded(books) o .error(mensaje).
-    /// Debe llamarse desde la vista (p. ej. en .task { await viewModel.loadLibrary() }).
     func loadLibrary() async {
         state = .loading
         do {
@@ -96,8 +92,6 @@ final class LibraryViewModel: ObservableObject {
         }
     }
 
-    /// Borra un libro por id y vuelve a cargar la lista.
-    /// La vista puede llamarlo desde swipe-to-delete o un botón.
     func delete(bookId: UUID) async {
         do {
             try await deleteBookUseCase.execute(bookId: bookId)
@@ -132,3 +126,4 @@ final class LibraryViewModel: ObservableObject {
             }
     }
 }
+

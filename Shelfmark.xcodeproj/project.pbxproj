@@ -6,11 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		3979D76B2F6360E6001E5507 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 39ACF22E2F58BEFE00C56F04 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 39ACF2352F58BEFE00C56F04;
+			remoteInfo = Shelfmark;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		3979D7672F6360E6001E5507 /* ShelfmarKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShelfmarKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		39ACF2362F58BEFE00C56F04 /* Shelfmark.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shelfmark.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		3979D7682F6360E6001E5507 /* ShelfmarKTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ShelfmarKTests;
+			sourceTree = "<group>";
+		};
 		39ACF2382F58BEFE00C56F04 /* Shelfmark */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Shelfmark;
@@ -19,6 +35,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3979D7642F6360E6001E5507 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		39ACF2332F58BEFE00C56F04 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				39ACF2382F58BEFE00C56F04 /* Shelfmark */,
+				3979D7682F6360E6001E5507 /* ShelfmarKTests */,
 				39ACF2372F58BEFE00C56F04 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				39ACF2362F58BEFE00C56F04 /* Shelfmark.app */,
+				3979D7672F6360E6001E5507 /* ShelfmarKTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +73,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		3979D7662F6360E6001E5507 /* ShelfmarKTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3979D76D2F6360E7001E5507 /* Build configuration list for PBXNativeTarget "ShelfmarKTests" */;
+			buildPhases = (
+				3979D7632F6360E6001E5507 /* Sources */,
+				3979D7642F6360E6001E5507 /* Frameworks */,
+				3979D7652F6360E6001E5507 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3979D76C2F6360E6001E5507 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3979D7682F6360E6001E5507 /* ShelfmarKTests */,
+			);
+			name = ShelfmarKTests;
+			packageProductDependencies = (
+			);
+			productName = ShelfmarKTests;
+			productReference = 3979D7672F6360E6001E5507 /* ShelfmarKTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		39ACF2352F58BEFE00C56F04 /* Shelfmark */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 39ACF2412F58BEFF00C56F04 /* Build configuration list for PBXNativeTarget "Shelfmark" */;
@@ -80,6 +128,10 @@
 				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					3979D7662F6360E6001E5507 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 39ACF2352F58BEFE00C56F04;
+					};
 					39ACF2352F58BEFE00C56F04 = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -100,11 +152,19 @@
 			projectRoot = "";
 			targets = (
 				39ACF2352F58BEFE00C56F04 /* Shelfmark */,
+				3979D7662F6360E6001E5507 /* ShelfmarKTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3979D7652F6360E6001E5507 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		39ACF2342F58BEFE00C56F04 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +175,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3979D7632F6360E6001E5507 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		39ACF2322F58BEFE00C56F04 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +191,57 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		3979D76C2F6360E6001E5507 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 39ACF2352F58BEFE00C56F04 /* Shelfmark */;
+			targetProxy = 3979D76B2F6360E6001E5507 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		3979D76E2F6360E7001E5507 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7XF45256S3;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fernando.ShelfmarKTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Shelfmark.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Shelfmark";
+			};
+			name = Debug;
+		};
+		3979D76F2F6360E7001E5507 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7XF45256S3;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fernando.ShelfmarKTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Shelfmark.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Shelfmark";
+			};
+			name = Release;
+		};
 		39ACF23F2F58BEFF00C56F04 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -256,6 +373,7 @@
 				DEVELOPMENT_TEAM = 7XF45256S3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Esta app necesita usar la cámara para escanear códigos de barras.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -288,6 +406,7 @@
 				DEVELOPMENT_TEAM = 7XF45256S3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Esta app necesita usar la cámara para escanear códigos de barras.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -313,6 +432,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3979D76D2F6360E7001E5507 /* Build configuration list for PBXNativeTarget "ShelfmarKTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3979D76E2F6360E7001E5507 /* Debug */,
+				3979D76F2F6360E7001E5507 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		39ACF2312F58BEFE00C56F04 /* Build configuration list for PBXProject "Shelfmark" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

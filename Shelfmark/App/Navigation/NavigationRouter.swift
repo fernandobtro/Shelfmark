@@ -5,11 +5,12 @@
 //  Created by Fernando Buenrostro on 05/03/26.
 //
 
-import Combine
 import SwiftUI
+import Observation
 
-class NavigationRouter: ObservableObject {
-    @Published var path = NavigationPath()
+@Observable
+class NavigationRouter {
+    var path = NavigationPath()
 
     func navigate(to destination: AnyHashable) {
         path.append(destination)
@@ -19,3 +20,4 @@ class NavigationRouter: ObservableObject {
         path = NavigationPath()
     }
 }
+

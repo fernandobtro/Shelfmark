@@ -6,36 +6,37 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 enum AddEditBookMode {
     case add
     case edit(existing: Book)
 }
 
-final class AddEditBookViewModel: ObservableObject {
+@Observable
+final class AddEditBookViewModel {
     // Información principal
-    @Published var title: String
-    @Published var subtitle: String
+    var title: String
+    var subtitle: String
 
     // Autores (texto separado por comas)
-    @Published var authorsText: String
+    var authorsText: String
 
     // Detalles
-    @Published var isbn: String
-    @Published var publisherName: String
-    @Published var pagesText: String
-    @Published var publicationDate: Date?
-    @Published var language: String
+    var isbn: String
+    var publisherName: String
+    var pagesText: String
+    var publicationDate: Date?
+    var language: String
 
     // Notas
-    @Published var descriptionText: String
+    var descriptionText: String
 
     // Estado de la pantalla
-    @Published var isFavorite: Bool
-    @Published var readingStatus: ReadingStatus
-    @Published var isSaving = false
-    @Published var errorMessage: String?
+    var isFavorite: Bool
+    var readingStatus: ReadingStatus
+    var isSaving = false
+    var errorMessage: String?
 
     private let saveBookUseCase: SaveBookUseCaseProtocol
     private let mode: AddEditBookMode
@@ -169,3 +170,4 @@ final class AddEditBookViewModel: ObservableObject {
         }
     }
 }
+

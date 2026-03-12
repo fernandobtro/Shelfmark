@@ -7,14 +7,14 @@
 
 import Foundation
 import SwiftUI
+import Observation
 
 struct LibrarySortMenuView: View {
-    @ObservedObject var viewModel: LibraryViewModel
+    @Bindable var viewModel: LibraryViewModel
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 1. Sort
             sectionHeader(title: "Ordenar por", icon: "arrow.up.arrow.down")
             ForEach(SortOption.allCases, id: \.self) { option in
                 menuItem(
@@ -24,7 +24,6 @@ struct LibrarySortMenuView: View {
                 )
             }
 
-            // 2. Group
             sectionHeader(title: "Agrupar por", icon: "rectangle.3.group")
             ForEach(GroupOption.allCases, id: \.self) { option in
                 menuItem(
@@ -43,10 +42,7 @@ struct LibrarySortMenuView: View {
     }
 }
 
-// MARK: - Auxiliary Subviews
-
 extension LibrarySortMenuView {
-    
     @ViewBuilder
     private func sectionHeader(title: String, icon: String) -> some View {
         HStack(spacing: 8) {
@@ -59,17 +55,17 @@ extension LibrarySortMenuView {
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
     }
-    
+
     @ViewBuilder
     private func menuItem(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
                 Text(title)
                     .font(.subheadline)
-                    .foregroundStyle(isSelected ? .textPrimary: .primary)
-                
+                    .foregroundStyle(isSelected ? .textPrimary : .primary)
+
                 Spacer()
-                
+
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.caption.weight(.bold))
@@ -79,8 +75,9 @@ extension LibrarySortMenuView {
             .contentShape(Rectangle())
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(isSelected ? Color.theme.primaryGreen.opacity(0.1): Color.clear)
+            .background(isSelected ? Color.theme.primaryGreen.opacity(0.1) : Color.clear)
         }
         .buttonStyle(PlainButtonStyle())
     }
 }
+

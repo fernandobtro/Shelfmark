@@ -5,8 +5,8 @@
 //  Created by Fernando Buenrostro on 05/03/26.
 //
 
-import Combine
 import Foundation
+import Observation
 
 // MARK: - Estado de la pantalla (igual que en Library: un solo estado posible a la vez)
 
@@ -17,11 +17,10 @@ enum BookDetailState: Equatable {
     case error(String)
 }
 
-final class BookDetailViewModel: ObservableObject {
-    
-    @Published var state: BookDetailState = .idle
+@Observable
+final class BookDetailViewModel {
+    var state: BookDetailState = .idle
 
-    // [RECIBIR UUID] El id del libro que esta pantalla debe mostrar. Lo usa loadDetail() para pedirlo al use case.
     private let bookId: UUID
     private let fetchBookDetailUseCase: FetchBookDetailUseCaseProtocol
 
@@ -35,8 +34,6 @@ final class BookDetailViewModel: ObservableObject {
         return book
     }
 
-    /// [RECUPERAR] Aquí se recupera el libro: el use case (que por debajo usa el repositorio → SwiftData) devuelve el Book con ese id.
-    /// [MANDAR A LA VIEW] Al poner state = .loaded(book), la view recibe los datos y los muestra en el switch sobre state.
     func loadDetail() async {
         state = .loading
         do {
@@ -55,3 +52,4 @@ final class BookDetailViewModel: ObservableObject {
         }
     }
 }
+

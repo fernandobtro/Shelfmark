@@ -6,19 +6,12 @@
 //
 
 import SwiftUI
-
-// MARK: - Botón Editar (instrucciones)
-// 5. Añade la propiedad let container: AppDIContainer (la vista la recibe desde RootView).
-// 6. Añade @State private var bookToEdit: Book? para controlar el sheet de edición.
-// 7. En la toolbar, añade otro ToolbarItem con Button("Editar") que haga bookToEdit = viewModel.loadedBook. Deshabilita u oculta el botón cuando viewModel.loadedBook == nil.
-// 8. Añade .sheet(item: $bookToEdit) { book in container.makeAddEditBookView(mode: .edit(existing: book)) }. Para que .sheet(item:) funcione, Book debe conformar Identifiable (paso 3). Opcional: en onDismiss del sheet llama viewModel.loadDetail() para refrescar el detalle tras guardar.
+import Observation
 
 struct BookDetailView: View {
-    @ObservedObject var viewModel: BookDetailViewModel
+    @Bindable var viewModel: BookDetailViewModel
     @Environment(\.dismiss) private var dismiss
-    
     let container: AppDIContainer
-    
     @State private var bookToEdit: Book?
 
     var body: some View {
@@ -136,18 +129,7 @@ struct BookDetailView: View {
     }
 }
 
-// MARK: - Preview
-
-private struct MockFetchBookDetailUseCase: FetchBookDetailUseCaseProtocol {
-    let book: Book?
-
-    func execute(bookId: UUID) async throws -> Book? {
-        book
-    }
-}
-
 #Preview("Con libro") {
-
     let container = AppDIContainer()
 
     let sampleBook = Book(
@@ -178,27 +160,31 @@ private struct MockFetchBookDetailUseCase: FetchBookDetailUseCaseProtocol {
 }
 
 #Preview("Cargando") {
-
     let container = AppDIContainer()
 
     struct PreviewWrapper: View {
-
         let container: AppDIContainer
 
-        @StateObject private var viewModel = BookDetailViewModel(
+        @State private var viewModel = BookDetailViewModel(
             bookId: UUID(),
             fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: nil)
         )
 
         var body: some View {
             NavigationStack {
-                BookDetailView(
-                    viewModel: viewModel,
-                    container: container
-                )
+                BookDetailView(viewModel: viewModel, container: container)
             }
         }
     }
 
     return PreviewWrapper(container: container)
+}
+
+
+private struct MockFetchBookDetailUseCase: FetchBookDetailUseCaseProtocol {
+    let book: Book?
+
+    func execute(bookId: UUID) async throws -> Book? {
+        book
+    }
 }

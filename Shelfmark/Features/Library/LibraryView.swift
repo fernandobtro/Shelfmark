@@ -7,21 +7,20 @@
 
 import SwiftUI
 import Foundation
+import Observation
 
 struct LibraryView: View {
     
-    @ObservedObject var viewModel: LibraryViewModel
+    @Bindable var viewModel: LibraryViewModel
 
     var body: some View {
         Group {
             switch viewModel.state {
 
             case .idle:
-                // Estado inicial antes de cargar.
                 Color.clear
 
             case .loading:
-                // Indicador de carga mientras fetchLibraryUseCase corre.
                 ProgressView("Cargando biblioteca…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -33,12 +32,9 @@ struct LibraryView: View {
             }
         }
         .navigationTitle("Biblioteca")
-
         .safeAreaInset(edge: .top) {
             LibraryHeaderView(viewModel: viewModel)
         }
-
-        // BOTÓN DE ORDENAR
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
@@ -48,61 +44,45 @@ struct LibraryView: View {
                 }
             }
         }
-        // SHEET con menú de orden (media altura, no pantalla completa)
         .sheet(isPresented: $viewModel.isShowingSortMenu) {
             LibrarySortMenuView(viewModel: viewModel)
-                .presentationDetents([.fraction(0.45)])
+                .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
-
-        // Carga inicial
         .task {
             await viewModel.loadLibrary()
         }
     }
 
-    // MARK: - Contenido principal de la biblioteca
-    
     @ViewBuilder
     private func libraryContent() -> some View {
+        if viewModel.sectionedBooks.isEmpty {
+            VStack(spacing: 16) {
+                Image(systemName: "book.closed")
+                    .font(.largeTitle)
+                    .foregroundStyle(.secondary)
 
-            // Si no hay libros después de aplicar filtros
-            if viewModel.sectionedBooks.isEmpty {
+                Text("Sin libros")
+                    .font(.headline)
 
-                VStack(spacing: 16) {
-                    Image(systemName: "book.closed")
-                        .font(.largeTitle)
-                        .foregroundStyle(.secondary)
-
-                    Text("Sin libros")
-                        .font(.headline)
-
-                    Text("Añade tu primer libro desde el escáner o el formulario.")
-                        .font(.subheadline)
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            } else {
-
-                // Vista real de la biblioteca
-                // Recibe secciones ya preparadas por el ViewModel
-                LibraryGridView(
-                    sections: viewModel.sectionedBooks,
-                    onDelete: { bookId in
-                        Task { await viewModel.delete(bookId: bookId) }
-                    }
-                )
-
+                Text("Añade tu primer libro desde el escáner o el formulario.")
+                    .font(.subheadline)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            LibraryGridView(
+                sections: viewModel.sectionedBooks,
+                onDelete: { bookId in
+                    Task { await viewModel.delete(bookId: bookId) }
+                }
+            )
+        }
     }
-
-    // MARK: - Error
 
     private func errorView(message: String) -> some View {
         VStack(spacing: 16) {
-
             Image(systemName: "exclamationmark.triangle")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
@@ -121,45 +101,4 @@ struct LibraryView: View {
         .padding()
     }
 }
-// MARK: - Preview (mocks solo para previsualización)
 
-private struct MockFetchLibraryUseCase: FetchLibraryUseCaseProtocol {
-    func execute() async throws -> [Book] {
-        [
-            Book(
-                id: UUID(),
-                isbn: "978-0-00-000000-0",
-                authors: [Author(id: UUID(), name: "Autor de ejemplo")],
-                title: "Libro de ejemplo",
-                numberOfPages: 100,
-                publisher: nil,
-                publicationDate: nil,
-                thumbnailURL: nil,
-                bookDescription: nil,
-                subtitle: nil,
-                language: "es",
-                isFavorite: false,
-                readingStatus: .none
-            )
-        ]
-    }
-}
-
-private struct MockDeleteBookUseCase: DeleteBookUseCaseProtocol {
-    func execute(bookId: UUID) async throws {}
-}
-
-#Preview {
-    struct PreviewWrapper: View {
-        @StateObject private var viewModel = LibraryViewModel(
-            fetchLibraryUseCase: MockFetchLibraryUseCase(),
-            deleteBookUseCase: MockDeleteBookUseCase()
-        )
-        var body: some View {
-            NavigationStack {
-                LibraryView(viewModel: viewModel)
-            }
-        }
-    }
-    return PreviewWrapper()
-}
