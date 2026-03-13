@@ -25,3 +25,4 @@ fastlane/test_output/
 # CocoaPods (if ever used)
 Pods/
 
+Secrets.xcconfig

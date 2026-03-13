@@ -37,7 +37,20 @@ final class AppDIContainer {
     lazy var deleteBookUseCase: DeleteBookUseCaseProtocol = {
         DeleteBookUseCaseImpl(repository: bookRepository)
     }()
+    
+    /// Para networking (lookup por ISBN)
+    private lazy var remoteBookDataSource: RemoteBookDataSource = {
+        RemoteBookDataSource(session: URLSession.shared, apiKey: AppSecrets.booksAPIKey)
+    }()
 
+    private lazy var remoteBookLookUpRepository: BookLookUpByISBNRepositoryProtocol = {
+        RemoteBookLookUpRepository(dataSource: remoteBookDataSource)
+    }()
+
+    private lazy var lookUpByISBNUseCase: LookUpByISBNUseCaseProtocol = {
+        LookUpByISBNUseCaseImpl(repository: remoteBookLookUpRepository)
+    }()
+    
     init() {
         do {
             modelContainer = try ModelContainer(
@@ -76,11 +89,13 @@ extension AppDIContainer {
     }
 
     // MARK: - Botón Editar desde detalle (instrucciones)
-    // 1. Añade un método makeAddEditBookView(mode: AddEditBookMode) -> AddEditBookView que devuelva AddEditBookView(viewModel: makeAddEditBookViewModel(mode: mode)). Así desde BookDetailView podrás abrir el formulario en modo .edit(existing: book) usando el container.
+    
     @MainActor
     func makeAddEditBookView(mode: AddEditBookMode) -> AddEditBookView {
         AddEditBookView(viewModel: makeAddEditBookViewModel(mode: mode))
     }
+    // Cuando implementes AddEditBookMode.addWithInitialData(Book), para abrir el formulario con un libro del escáner usa:
+    // makeAddEditBookView(mode: .addWithInitialData(book))
 
     @MainActor
     func makeBookDetailViewModel(bookId: UUID) -> BookDetailViewModel {
@@ -88,5 +103,10 @@ extension AppDIContainer {
             bookId: bookId,
             fetchBookDetailUseCase: fetchBookDetailUseCase
         )
+    }
+    
+    @MainActor
+    func makeBookScannerViewModel() -> BookScannerViewModel {
+        BookScannerViewModel(lookUpByISBNUseCase: lookUpByISBNUseCase)
     }
 }

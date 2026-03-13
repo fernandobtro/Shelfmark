@@ -21,6 +21,16 @@
 		39ACF2362F58BEFE00C56F04 /* Shelfmark.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shelfmark.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3979D8442F6391B8001E5507 /* Exceptions for "Shelfmark" folder in "Shelfmark" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 39ACF2352F58BEFE00C56F04 /* Shelfmark */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3979D7682F6360E6001E5507 /* ShelfmarKTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -29,6 +39,9 @@
 		};
 		39ACF2382F58BEFE00C56F04 /* Shelfmark */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3979D8442F6391B8001E5507 /* Exceptions for "Shelfmark" folder in "Shelfmark" target */,
+			);
 			path = Shelfmark;
 			sourceTree = "<group>";
 		};
@@ -244,6 +257,8 @@
 		};
 		39ACF23F2F58BEFF00C56F04 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 39ACF2382F58BEFE00C56F04 /* Shelfmark */;
+			baseConfigurationReferenceRelativePath = Secrets.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -308,6 +323,8 @@
 		};
 		39ACF2402F58BEFF00C56F04 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 39ACF2382F58BEFE00C56F04 /* Shelfmark */;
+			baseConfigurationReferenceRelativePath = Secrets.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -373,6 +390,7 @@
 				DEVELOPMENT_TEAM = 7XF45256S3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Shelfmark/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Esta app necesita usar la cámara para escanear códigos de barras.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -406,6 +424,7 @@
 				DEVELOPMENT_TEAM = 7XF45256S3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Shelfmark/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Esta app necesita usar la cámara para escanear códigos de barras.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

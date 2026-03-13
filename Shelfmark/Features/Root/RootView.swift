@@ -12,7 +12,12 @@ struct RootView: View {
 
     @State private var libraryViewModel: LibraryViewModel
     @State private var selectedTab: TabBar = .library
+    @State private var showAddOptionsDialog = false
+    @State private var isPresentingScanner = false
     @State private var isPresentingAddBook = false
+    @State private var scannerViewModel: BookScannerViewModel?
+    @State private var bookToAddFromScanner: Book?
+    @State private var showNotFoundAlert = false
 
     init(container: AppDIContainer) {
         self.container = container
@@ -27,12 +32,62 @@ struct RootView: View {
             CustomTabBar(
                 selectedTab: $selectedTab,
                 onPlusButtonTap: {
-                    isPresentingAddBook = true
+                    showAddOptionsDialog = true
                 }
             )
         }
-        .sheet(isPresented: $isPresentingAddBook) {
-            container.makeAddBookView()
+        .confirmationDialog("Añadir libro", isPresented: $showAddOptionsDialog, titleVisibility: .visible) {
+            Button("Escanear código de barras") {
+                scannerViewModel = container.makeBookScannerViewModel()
+                isPresentingScanner = true
+            }
+            Button("Añadir manualmente") {
+                bookToAddFromScanner = nil
+                isPresentingAddBook = true
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Elige cómo quieres añadir el libro.")
+        }
+        .sheet(isPresented: $isPresentingScanner, onDismiss: {
+            scannerViewModel = nil
+        }) {
+            if let vm = scannerViewModel {
+                BookScannerView(viewModel: vm)
+                    .onChange(of: vm.state) { _, newState in
+                        switch newState {
+                        case .found(let book):
+                            isPresentingScanner = false
+                            bookToAddFromScanner = book
+                            isPresentingAddBook = true
+                        case .notFound:
+                            isPresentingScanner = false
+                            showNotFoundAlert = true
+                        case .error:
+                            break
+                        default:
+                            break
+                        }
+                    }
+            }
+        }
+        .sheet(isPresented: $isPresentingAddBook, onDismiss: {
+            bookToAddFromScanner = nil
+            Task { await libraryViewModel.loadLibrary() }
+        }) {
+            if let book = bookToAddFromScanner {
+                container.makeAddEditBookView(mode: .addWithInitialData(book))
+            } else {
+                container.makeAddBookView()
+            }
+        }
+        .alert("Libro no encontrado", isPresented: $showNotFoundAlert) {
+            Button("Añadir manualmente") {
+                isPresentingAddBook = true
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("No se encontró el libro con ese ISBN. ¿Quieres añadirlo manualmente?")
         }
     }
 
@@ -72,4 +127,3 @@ struct RootView: View {
 #Preview {
     RootView(container: AppDIContainer())
 }
-

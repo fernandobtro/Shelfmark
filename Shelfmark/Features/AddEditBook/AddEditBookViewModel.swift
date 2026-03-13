@@ -10,6 +10,7 @@ import Observation
 
 enum AddEditBookMode {
     case add
+    case addWithInitialData(Book)
     case edit(existing: Book)
 }
 
@@ -59,6 +60,19 @@ final class AddEditBookViewModel {
             isFavorite = false
             readingStatus = .none
 
+        case .addWithInitialData(let book):
+            title = book.title
+            subtitle = book.subtitle ?? ""
+            authorsText = book.authors.map(\.name).joined(separator: ", ")
+            isbn = book.isbn
+            publisherName = book.publisher?.name ?? ""
+            pagesText = book.numberOfPages.map(String.init) ?? ""
+            publicationDate = book.publicationDate
+            language = book.language
+            descriptionText = book.bookDescription ?? ""
+            isFavorite = false
+            readingStatus = .none
+
         case .edit(let existing):
             title = existing.title
             subtitle = existing.subtitle ?? ""
@@ -76,7 +90,7 @@ final class AddEditBookViewModel {
 
     var navigationTitle: String {
         switch mode {
-        case .add: return "Añadir libro"
+        case .add, .addWithInitialData: return "Añadir libro"
         case .edit: return "Editar libro"
         }
     }
@@ -114,7 +128,7 @@ final class AddEditBookViewModel {
     private func buildBook() -> Book {
         let bookId: UUID
         switch mode {
-        case .add:
+        case .add, .addWithInitialData:
             bookId = UUID()
         case .edit(let existing):
             bookId = existing.id
