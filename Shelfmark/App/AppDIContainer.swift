@@ -22,6 +22,11 @@ final class AppDIContainer {
     private lazy var readingListRepository: ReadingListRepositoryProtocol = {
         SwiftDataReadingListRepository(modelContext: modelContainer.mainContext)
     }()
+    
+    /// Quote Repository based on SwiftData
+    private lazy var quoteRepository: QuoteRepositoryProtocol = {
+        SwiftDataQuoteRepository(modelContext: modelContainer.mainContext)
+    }()
 
     /// Caso de uso: obtener toda la biblioteca.
     lazy var fetchLibraryUseCase: FetchLibraryUseCaseProtocol = {
@@ -73,6 +78,31 @@ final class AppDIContainer {
         RemoveBookFromReadingListUseCaseImpl(repository: readingListRepository)
     }()
     
+    /// Use Case: Fetch Quotes
+    lazy var fetchQuotesUseCase: FetchQuotesUseCaseProtocol = {
+        FetchQuotesUseCaseImpl(repository: quoteRepository)
+    }()
+    
+    /// Use Case: Fetch QuotesByID
+    lazy var fetchQuoteByIdUseCase: FetchQuoteByIdUseCaseProtocol = {
+        FetchQuoteByIdUseCaseImpl(repository: quoteRepository)
+    }()
+    
+    /// Use Case: Save Quote
+    lazy var saveQuoteUseCase: SaveQuoteUseCaseProtocol = {
+        SaveQuoteUseCaseImpl(repository: quoteRepository)
+    }()
+    
+    /// Use Case: Delete Quote
+    lazy var deleteQuoteUseCase: DeleteQuoteUseCaseProtocol = {
+        DeleteQuoteUseCaseImpl(repository: quoteRepository)
+    }()
+
+    /// Use Case: reconocer texto en imagen (OCR para citas).
+    lazy var recognizeTextInImageUseCase: RecognizeTextInImageUseCaseProtocol = {
+        RecognizeTextInImageUseCaseImpl()
+    }()
+    
     /// Para networking (lookup por ISBN)
     private lazy var remoteBookDataSource: RemoteBookDataSource = {
         RemoteBookDataSource(session: URLSession.shared, apiKey: AppSecrets.booksAPIKey)
@@ -93,7 +123,8 @@ final class AppDIContainer {
                      AuthorEntity.self,
                      PublisherEntity.self,
                      ReadingListEntity.self,
-                     ReadingListItemEntity.self
+                     ReadingListItemEntity.self,
+                     QuoteEntity.self
             )
         } catch {
             fatalError("No se pudo inicializar la base de datos: \(error)")
@@ -103,6 +134,7 @@ final class AppDIContainer {
 
 // MARK: - ViewModel Factories
 
+@MainActor
 extension AppDIContainer {
     @MainActor
     func makeLibraryViewModel() -> LibraryViewModel {
@@ -124,8 +156,6 @@ extension AppDIContainer {
     func makeAddBookView() -> AddEditBookView {
         AddEditBookView(viewModel: makeAddEditBookViewModel(mode: .add))
     }
-
-    // MARK: - Botón Editar desde detalle (instrucciones)
     
     @MainActor
     func makeAddEditBookView(mode: AddEditBookMode) -> AddEditBookView {
@@ -159,6 +189,41 @@ extension AppDIContainer {
             fetchReadingListByIdUseCase: fetchReadingListByIdUseCase,
             addBookToReadingListUseCase: addBookToReadingListUseCase,
             removeBookFromReadingListUseCase: removeBookFromReadingListUseCase
+        )
+    }
+    
+    @MainActor
+    func makeQuotesViewModel() -> QuotesViewModel {
+        QuotesViewModel(
+            fetchQuotesUseCase: fetchQuotesUseCase,
+            fetchLibraryUseCase: fetchLibraryUseCase,
+            deleteQuoteUseCase: deleteQuoteUseCase
+        )
+    }
+
+    @MainActor
+    func makeAddEditQuoteViewModel(mode: AddEditQuoteMode) -> AddEditQuoteViewModel {
+        AddEditQuoteViewModel(
+            mode: mode,
+            saveQuoteUseCase: saveQuoteUseCase,
+            fetchQuoteByIdUseCase: fetchQuoteByIdUseCase,
+            fetchLibraryUseCase: fetchLibraryUseCase,
+            deleteQuoteUseCase: deleteQuoteUseCase
+        )
+    }
+
+    @MainActor
+    func makeQuoteScannerViewModel() -> QuoteScannerViewModel {
+        QuoteScannerViewModel(recognizeTextUseCase: recognizeTextInImageUseCase)
+    }
+
+    @MainActor
+    func makeQuoteDetailViewModel(quoteId: UUID) -> QuoteDetailViewModel {
+        QuoteDetailViewModel(
+            quoteId: quoteId,
+            fetchQuoteByIdUseCase: fetchQuoteByIdUseCase,
+            fetchBookDetailUseCase: fetchBookDetailUseCase,
+            deleteQuoteUseCase: deleteQuoteUseCase
         )
     }
 }

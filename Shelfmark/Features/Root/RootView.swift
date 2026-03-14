@@ -12,11 +12,16 @@ struct RootView: View {
 
     @State private var libraryViewModel: LibraryViewModel
     @State private var listsViewModel: ListsViewModel
+    @State private var quotesViewModel: QuotesViewModel
     @State private var selectedTab: TabBar = .library
     @State private var showAddOptionsDialog = false
     @State private var isPresentingScanner = false
     @State private var isPresentingAddBook = false
     @State private var showCreateListSheet = false
+    @State private var showAddQuoteOptionsDialog = false
+    @State private var showScanQuoteSheet = false
+    @State private var showAddEditQuoteSheet = false
+    @State private var quoteScannerViewModel: QuoteScannerViewModel?
     @State private var scannerViewModel: BookScannerViewModel?
     @State private var bookToAddFromScanner: Book?
     @State private var showNotFoundAlert = false
@@ -25,6 +30,7 @@ struct RootView: View {
         self.container = container
         _libraryViewModel = State(initialValue: container.makeLibraryViewModel())
         _listsViewModel = State(initialValue: container.makeListsViewModel())
+        _quotesViewModel = State(initialValue: container.makeQuotesViewModel())
     }
 
     var body: some View {
@@ -40,7 +46,9 @@ struct RootView: View {
                         showAddOptionsDialog = true
                     case .lists:
                         showCreateListSheet = true
-                    case .quotes, .profile:
+                    case .quotes:
+                        showAddQuoteOptionsDialog = true
+                    case .profile:
                         break
                     }
                 }
@@ -105,6 +113,34 @@ struct RootView: View {
                 onDismiss: { showCreateListSheet = false }
             )
         }
+        .confirmationDialog("Añadir cita", isPresented: $showAddQuoteOptionsDialog, titleVisibility: .visible) {
+            Button("Escanear cita") {
+                quoteScannerViewModel = container.makeQuoteScannerViewModel()
+                showScanQuoteSheet = true
+            }
+            Button("Añadir manualmente") {
+                showAddEditQuoteSheet = true
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Usa la cámara para escanear texto o añade la cita a mano.")
+        }
+        .sheet(isPresented: $showScanQuoteSheet, onDismiss: {
+            quoteScannerViewModel = nil
+            Task { await quotesViewModel.loadQuotes() }
+        }) {
+            if let vm = quoteScannerViewModel {
+                QuoteScannerView(viewModel: vm, container: container)
+            }
+        }
+        .sheet(isPresented: $showAddEditQuoteSheet, onDismiss: {
+            Task { await quotesViewModel.loadQuotes() }
+        }) {
+            AddEditQuoteView(
+                viewModel: container.makeAddEditQuoteViewModel(mode: AddEditQuoteMode.add),
+                onDelete: nil
+            )
+        }
     }
 
     @ViewBuilder
@@ -129,8 +165,13 @@ struct RootView: View {
 
         case .quotes:
             NavigationStack {
-                Text("Citas")
-                    .navigationTitle(TabBar.quotes.title)
+                QuotesView(viewModel: quotesViewModel, container: container)
+                    .navigationDestination(for: UUID.self) { quoteId in
+                        QuoteDetailView(
+                            viewModel: container.makeQuoteDetailViewModel(quoteId: quoteId),
+                            container: container
+                        )
+                    }
             }
 
         case .profile:

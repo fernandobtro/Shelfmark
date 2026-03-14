@@ -43,8 +43,8 @@ struct CustomTabBar: View {
                     .fill(Color.primaryGreen.opacity(0.9))
                     .frame(width: 62, height: 62)
                     .shadow(color: .green.opacity(0.3), radius: 8, x: 0, y: 4)
-                
-                Image(systemName: "plus")
+
+                Image(systemName: selectedTab == .quotes ? "camera" : "plus")
                     .font(.system(size: 28, weight: .semibold))
                     .foregroundStyle(.white)
             }
