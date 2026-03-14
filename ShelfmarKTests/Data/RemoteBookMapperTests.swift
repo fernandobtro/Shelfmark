@@ -105,7 +105,8 @@ final class RemoteBookMapperTests: XCTestCase {
         let result = RemoteBookMapper.map(response: dto, isbn: "123")
 
         XCTAssertNotNil(result)
-        let calendar = Calendar(identifier: .gregorian)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
         let year = result.flatMap { calendar.dateComponents([.year], from: $0.publicationDate!).year }
         XCTAssertEqual(year, 2020)
     }
@@ -127,7 +128,8 @@ final class RemoteBookMapperTests: XCTestCase {
         let result = RemoteBookMapper.map(response: dto, isbn: "123")
 
         XCTAssertNotNil(result)
-        let calendar = Calendar(identifier: .gregorian)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
         let comps = result.map { calendar.dateComponents([.year, .month], from: $0.publicationDate!) }
         XCTAssertEqual(comps?.year, 2020)
         XCTAssertEqual(comps?.month, 6)
