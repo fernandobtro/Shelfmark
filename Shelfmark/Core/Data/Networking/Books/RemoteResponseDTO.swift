@@ -20,14 +20,14 @@ struct VolumeDTO: Decodable {
 
 struct VolumeInfoDTO: Decodable {
     let title: String?
-        let subtitle: String?
-        let authors: [String]?
-        let publisher: String?
-        let publishedDate: String?
-        let description: String?
-        let pageCount: Int?
-        let language: String?
-        let imageLinks: ImageLinksDTO?
+    let subtitle: String?
+    let authors: [String]?
+    let publisher: String?
+    let publishedDate: String?
+    let description: String?
+    let pageCount: Int?
+    let language: String?
+    let imageLinks: ImageLinksDTO?
         
     enum CodingKeys: String, CodingKey {
         case title
@@ -43,5 +43,7 @@ struct VolumeInfoDTO: Decodable {
 }
 
 struct ImageLinksDTO: Decodable {
+    /// Google Books suele devolver `smallThumbnail` y `thumbnail`. A veces solo uno de los dos.
+    let smallThumbnail: String?
     let thumbnail: String?
 }

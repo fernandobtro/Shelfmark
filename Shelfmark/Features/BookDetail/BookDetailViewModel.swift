@@ -23,10 +23,12 @@ final class BookDetailViewModel {
 
     private let bookId: UUID
     private let fetchBookDetailUseCase: FetchBookDetailUseCaseProtocol
+    private let deleteBookUseCase: DeleteBookUseCaseProtocol
 
-    init(bookId: UUID, fetchBookDetailUseCase: FetchBookDetailUseCaseProtocol) {
+    init(bookId: UUID, fetchBookDetailUseCase: FetchBookDetailUseCaseProtocol, deleteBookUseCase: DeleteBookUseCaseProtocol) {
         self.bookId = bookId
         self.fetchBookDetailUseCase = fetchBookDetailUseCase
+        self.deleteBookUseCase = deleteBookUseCase
     }
 
     var loadedBook: Book? {
@@ -45,6 +47,16 @@ final class BookDetailViewModel {
                     state = .error("No se encontró el libro.")
                 }
             }
+        } catch {
+            await MainActor.run {
+                state = .error(error.localizedDescription)
+            }
+        }
+    }
+
+    func delete() async {
+        do {
+            try await deleteBookUseCase.execute(bookId: bookId)
         } catch {
             await MainActor.run {
                 state = .error(error.localizedDescription)

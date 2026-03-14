@@ -31,6 +31,7 @@ struct LibraryCellView: View {
                             image
                                 .resizable()
                                 .scaledToFill()
+                                .clipped()
                         case .failure:
                             Image(systemName: "book.closed")
                                 .font(.largeTitle)
@@ -49,22 +50,25 @@ struct LibraryCellView: View {
             .aspectRatio(2/3, contentMode: .fit)
             .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
 
-            // Título y autor centrados
-            Text(book.title)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.primary)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-
-            if !authorsText.isEmpty {
-                Text(authorsText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+            // Título y autor centrados, con altura fija para que todas las celdas tengan la misma altura
+            VStack(spacing: 2) {
+                Text(book.title)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
                     .multilineTextAlignment(.center)
+
+                if !authorsText.isEmpty {
+                    Text(authorsText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .multilineTextAlignment(.center)
+                }
             }
+            .frame(maxWidth: .infinity, minHeight: 40, alignment: .top)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 }
 

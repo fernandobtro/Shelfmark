@@ -11,10 +11,12 @@ struct RootView: View {
     let container: AppDIContainer
 
     @State private var libraryViewModel: LibraryViewModel
+    @State private var listsViewModel: ListsViewModel
     @State private var selectedTab: TabBar = .library
     @State private var showAddOptionsDialog = false
     @State private var isPresentingScanner = false
     @State private var isPresentingAddBook = false
+    @State private var showCreateListSheet = false
     @State private var scannerViewModel: BookScannerViewModel?
     @State private var bookToAddFromScanner: Book?
     @State private var showNotFoundAlert = false
@@ -22,6 +24,7 @@ struct RootView: View {
     init(container: AppDIContainer) {
         self.container = container
         _libraryViewModel = State(initialValue: container.makeLibraryViewModel())
+        _listsViewModel = State(initialValue: container.makeListsViewModel())
     }
 
     var body: some View {
@@ -32,7 +35,14 @@ struct RootView: View {
             CustomTabBar(
                 selectedTab: $selectedTab,
                 onPlusButtonTap: {
-                    showAddOptionsDialog = true
+                    switch selectedTab {
+                    case .library:
+                        showAddOptionsDialog = true
+                    case .lists:
+                        showCreateListSheet = true
+                    case .quotes, .profile:
+                        break
+                    }
                 }
             )
         }
@@ -89,6 +99,12 @@ struct RootView: View {
         } message: {
             Text("No se encontró el libro con ese ISBN. ¿Quieres añadirlo manualmente?")
         }
+        .sheet(isPresented: $showCreateListSheet) {
+            CreateListSheetView(
+                viewModel: listsViewModel,
+                onDismiss: { showCreateListSheet = false }
+            )
+        }
     }
 
     @ViewBuilder
@@ -105,8 +121,10 @@ struct RootView: View {
 
         case .lists:
             NavigationStack {
-                Text("Listas")
-                    .navigationTitle(TabBar.lists.title)
+                ListsView(viewModel: listsViewModel)
+                    .navigationDestination(for: UUID.self) { listId in
+                        ReadingListDetailView(viewModel: container.makeReadingListDetailViewModel(listId: listId), container: container)
+                    }
             }
 
         case .quotes:

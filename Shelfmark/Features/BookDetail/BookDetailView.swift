@@ -13,6 +13,8 @@ struct BookDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let container: AppDIContainer
     @State private var bookToEdit: Book?
+    @State private var isShowingDeleteAlert = false
+    @State private var isDeleting = false
 
     var body: some View {
         Group {
@@ -97,6 +99,34 @@ struct BookDetailView: View {
                 LabeledContent("Favorito", value: book.isFavorite ? "Sí" : "No")
                 LabeledContent("Estado", value: readingStatusDisplayName(book.readingStatus))
             }
+
+            Section {
+                Button(role: .destructive) {
+                    isShowingDeleteAlert = true
+                } label: {
+                    if isDeleting {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    } else {
+                        Text("Eliminar libro")
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .disabled(isDeleting)
+            }
+        }
+        .alert("Eliminar libro", isPresented: $isShowingDeleteAlert) {
+            Button("Eliminar", role: .destructive) {
+                isDeleting = true
+                Task {
+                    await viewModel.delete()
+                    isDeleting = false
+                    dismiss()
+                }
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Esta acción eliminará el libro de tu biblioteca. No se puede deshacer.")
         }
     }
 
@@ -152,7 +182,8 @@ struct BookDetailView: View {
         BookDetailView(
             viewModel: BookDetailViewModel(
                 bookId: sampleBook.id,
-                fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: sampleBook)
+                fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: sampleBook),
+                deleteBookUseCase: MockDeleteBookUseCase()
             ),
             container: container
         )
@@ -167,7 +198,8 @@ struct BookDetailView: View {
 
         @State private var viewModel = BookDetailViewModel(
             bookId: UUID(),
-            fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: nil)
+            fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: nil),
+            deleteBookUseCase: MockDeleteBookUseCase()
         )
 
         var body: some View {
@@ -187,4 +219,8 @@ private struct MockFetchBookDetailUseCase: FetchBookDetailUseCaseProtocol {
     func execute(bookId: UUID) async throws -> Book? {
         book
     }
+}
+
+private struct MockDeleteBookUseCase: DeleteBookUseCaseProtocol {
+    func execute(bookId: UUID) async throws { }
 }

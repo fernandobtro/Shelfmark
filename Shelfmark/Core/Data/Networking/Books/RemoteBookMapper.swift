@@ -23,9 +23,17 @@ struct RemoteBookMapper {
             Publisher(id: UUID(), name: $0)
         }
         
-        let thumbnailURL = volumeInfo.imageLinks?.thumbnail.flatMap {
-            URL(string: $0)
+        // Google Books suele devolver thumbnails con esquema http:// que App Transport Security bloquea.
+        // Normalizamos a https:// para que AsyncImage pueda cargarlas sin excepciones en Info.plist.
+        let thumbnailStringRaw = volumeInfo.imageLinks?.thumbnail ?? volumeInfo.imageLinks?.smallThumbnail
+        let thumbnailString = thumbnailStringRaw.map { url -> String in
+            if url.hasPrefix("http://") {
+                return "https://" + url.dropFirst("http://".count)
+            } else {
+                return url
+            }
         }
+        let thumbnailURL = thumbnailString.flatMap { URL(string: $0) }
         
         let publicationDate = Self.parsePublicationDate(volumeInfo.publishedDate)
         

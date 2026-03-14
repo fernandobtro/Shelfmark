@@ -18,5 +18,5 @@ final class LookUpByISBNUseCaseImpl: LookUpByISBNUseCaseProtocol {
         let trimmed = isbn.trimmingCharacters(in: .whitespacesAndNewlines)
         return try await repository.fetch(byISBN: trimmed)
     }
-    
 }
+

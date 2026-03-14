@@ -1,5 +1,5 @@
 //
-//  SaveBookUseCaseImpl.swift
+//  DeleteBookUseCaseImpl.swift
 //  Shelfmark
 //
 //  Created by Fernando Buenrostro on 04/03/26.
@@ -7,14 +7,15 @@
 
 import Foundation
 
-final class SaveBookUseCaseImpl: SaveBookUseCaseProtocol {
+final class DeleteBookUseCaseImpl: DeleteBookUseCaseProtocol {
     private let repository: BookRepositoryProtocol
-
+    
     init(repository: BookRepositoryProtocol) {
         self.repository = repository
     }
-
-    func execute(_ book: Book) async throws {
-        try await repository.save(book)
+    
+    func execute(bookId: UUID) async throws {
+        try await repository.delete(by: bookId)
     }
 }
+

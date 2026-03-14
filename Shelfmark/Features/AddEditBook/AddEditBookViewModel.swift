@@ -41,6 +41,8 @@ final class AddEditBookViewModel {
 
     private let saveBookUseCase: SaveBookUseCaseProtocol
     private let mode: AddEditBookMode
+    /// Libro original (si venimos de escáner con datos iniciales o de editar), para no perder campos que no se editan en el formulario (como thumbnailURL).
+    private let originalBook: Book?
 
     init(mode: AddEditBookMode, saveBookUseCase: SaveBookUseCaseProtocol) {
         self.mode = mode
@@ -48,6 +50,7 @@ final class AddEditBookViewModel {
 
         switch mode {
         case .add:
+            originalBook = nil
             title = ""
             subtitle = ""
             authorsText = ""
@@ -61,6 +64,7 @@ final class AddEditBookViewModel {
             readingStatus = .none
 
         case .addWithInitialData(let book):
+            originalBook = book
             title = book.title
             subtitle = book.subtitle ?? ""
             authorsText = book.authors.map(\.name).joined(separator: ", ")
@@ -74,6 +78,7 @@ final class AddEditBookViewModel {
             readingStatus = .none
 
         case .edit(let existing):
+            originalBook = existing
             title = existing.title
             subtitle = existing.subtitle ?? ""
             authorsText = existing.authors.map(\.name).joined(separator: ", ")
@@ -152,6 +157,15 @@ final class AddEditBookViewModel {
         let descriptionValue = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
         let finalDescription = descriptionValue.isEmpty ? nil : descriptionValue
 
+        // Conserva la portada remota / existente cuando venimos del escáner o de editar.
+        let finalThumbnailURL: URL?
+        switch mode {
+        case .add:
+            finalThumbnailURL = nil
+        case .addWithInitialData, .edit:
+            finalThumbnailURL = originalBook?.thumbnailURL
+        }
+
         return Book(
             id: bookId,
             isbn: finalIsbn,
@@ -160,7 +174,7 @@ final class AddEditBookViewModel {
             numberOfPages: numberOfPages,
             publisher: publisher,
             publicationDate: publicationDate,
-            thumbnailURL: nil,
+            thumbnailURL: finalThumbnailURL,
             bookDescription: finalDescription,
             subtitle: finalSubtitle,
             language: language.isEmpty ? "es" : language,
