@@ -56,7 +56,6 @@ final class AddEditQuoteViewModel {
 
     func load() async {
         await MainActor.run { isLoading = true }
-        defer { Task { @MainActor in isLoading = false } }
 
         do {
             let library = try await fetchLibraryUseCase.execute()
@@ -64,26 +63,29 @@ final class AddEditQuoteViewModel {
 
             if case .edit(let quoteId) = mode {
                 guard let quote = try await fetchQuoteByIdUseCase.execute(quoteId: quoteId) else {
-                    await MainActor.run { errorMessage = "No se encontró la cita" }
+                    await MainActor.run { errorMessage = "No se encontró la cita"; isLoading = false }
                     return
                 }
                 await MainActor.run {
                     text = quote.text
                     selectedBookId = quote.bookId
                     pageReference = quote.pageReference ?? ""
+                    isLoading = false
                 }
             } else if case .addWithInitialText(let initialText) = mode {
                 await MainActor.run { text = initialText }
                 if let first = library.first {
                     await MainActor.run { selectedBookId = first.id }
                 }
+                await MainActor.run { isLoading = false }
             } else {
                 if let first = library.first {
                     await MainActor.run { selectedBookId = first.id }
                 }
+                await MainActor.run { isLoading = false }
             }
         } catch {
-            await MainActor.run { errorMessage = error.localizedDescription }
+            await MainActor.run { errorMessage = error.localizedDescription; isLoading = false }
         }
     }
 

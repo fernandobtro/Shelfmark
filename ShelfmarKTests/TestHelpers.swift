@@ -37,3 +37,19 @@ func makeSampleReadingList(id: UUID = UUID(), name: String = "List") -> ReadingL
         notes: nil
     )
 }
+
+func makeSampleQuote(
+    id: UUID = UUID(),
+    text: String = "Sample quote text",
+    bookId: UUID = UUID(),
+    pageReference: String? = nil,
+    createdAt: Date = Date()
+) -> Quote {
+    Quote(
+        id: id,
+        text: text,
+        bookId: bookId,
+        pageReference: pageReference,
+        createdAt: createdAt
+    )
+}
