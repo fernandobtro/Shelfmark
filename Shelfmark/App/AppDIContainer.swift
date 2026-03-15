@@ -28,6 +28,11 @@ final class AppDIContainer {
         SwiftDataQuoteRepository(modelContext: modelContainer.mainContext)
     }()
 
+    /// User profile (display name, etc.) persisted in UserDefaults.
+    private lazy var userProfileRepository: UserProfileRepositoryProtocol = {
+        UserDefaultsUserProfileRepository()
+    }()
+
     /// Caso de uso: obtener toda la biblioteca.
     lazy var fetchLibraryUseCase: FetchLibraryUseCaseProtocol = {
         FetchLibraryUseCaseImpl(repository: bookRepository)
@@ -224,6 +229,16 @@ extension AppDIContainer {
             fetchQuoteByIdUseCase: fetchQuoteByIdUseCase,
             fetchBookDetailUseCase: fetchBookDetailUseCase,
             deleteQuoteUseCase: deleteQuoteUseCase
+        )
+    }
+
+    @MainActor
+    func makeProfileViewModel() -> ProfileViewModel {
+        ProfileViewModel(
+            userProfileRepository: userProfileRepository,
+            fetchLibraryUseCase: fetchLibraryUseCase,
+            fetchQuotesUseCase: fetchQuotesUseCase,
+            fetchReadingListsUseCase: fetchReadingListsUseCase
         )
     }
 }

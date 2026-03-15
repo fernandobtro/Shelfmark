@@ -13,6 +13,7 @@ struct RootView: View {
     @State private var libraryViewModel: LibraryViewModel
     @State private var listsViewModel: ListsViewModel
     @State private var quotesViewModel: QuotesViewModel
+    @State private var profileViewModel: ProfileViewModel
     @State private var selectedTab: TabBar = .library
     @State private var showAddOptionsDialog = false
     @State private var isPresentingScanner = false
@@ -31,6 +32,7 @@ struct RootView: View {
         _libraryViewModel = State(initialValue: container.makeLibraryViewModel())
         _listsViewModel = State(initialValue: container.makeListsViewModel())
         _quotesViewModel = State(initialValue: container.makeQuotesViewModel())
+        _profileViewModel = State(initialValue: container.makeProfileViewModel())
     }
 
     var body: some View {
@@ -176,8 +178,7 @@ struct RootView: View {
 
         case .profile:
             NavigationStack {
-                Text("Perfil")
-                    .navigationTitle(TabBar.profile.title)
+                ProfileView(viewModel: profileViewModel)
             }
         }
     }
