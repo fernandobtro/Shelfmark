@@ -26,6 +26,8 @@ struct RootView: View {
     @State private var scannerViewModel: BookScannerViewModel?
     @State private var bookToAddFromScanner: Book?
     @State private var showNotFoundAlert = false
+    @State private var refreshLibraryTrigger = 0
+    @State private var refreshQuotesTrigger = 0
 
     init(container: AppDIContainer) {
         self.container = container
@@ -37,6 +39,9 @@ struct RootView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            Color.theme.mainBackground
+                .ignoresSafeArea()
+
             tabContent
                 .padding(.bottom, 80)
 
@@ -102,7 +107,7 @@ struct RootView: View {
         }
         .sheet(isPresented: $isPresentingAddBook, onDismiss: {
             bookToAddFromScanner = nil
-            Task { await libraryViewModel.loadLibrary() }
+            refreshLibraryTrigger += 1
         }) {
             if let book = bookToAddFromScanner {
                 container.makeAddEditBookView(mode: .addWithInitialData(book))
@@ -138,19 +143,29 @@ struct RootView: View {
         }
         .sheet(isPresented: $showScanQuoteSheet, onDismiss: {
             quoteScannerViewModel = nil
-            Task { await quotesViewModel.loadQuotes() }
+            refreshQuotesTrigger += 1
         }) {
             if let vm = quoteScannerViewModel {
                 QuoteScannerView(viewModel: vm, container: container)
             }
         }
         .sheet(isPresented: $showAddEditQuoteSheet, onDismiss: {
-            Task { await quotesViewModel.loadQuotes() }
+            refreshQuotesTrigger += 1
         }) {
             AddEditQuoteView(
                 viewModel: container.makeAddEditQuoteViewModel(mode: AddEditQuoteMode.add),
                 onDelete: nil
             )
+        }
+        .task(id: refreshLibraryTrigger) {
+            if refreshLibraryTrigger > 0 {
+                await libraryViewModel.loadLibrary()
+            }
+        }
+        .task(id: refreshQuotesTrigger) {
+            if refreshQuotesTrigger > 0 {
+                await quotesViewModel.loadQuotes()
+            }
         }
     }
 

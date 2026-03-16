@@ -19,21 +19,31 @@ struct LibraryCellView: View {
         book.authors.map(\.name).joined(separator: ", ")
     }
 
+    private var readingStatusLabel: String? {
+        switch book.readingStatus {
+        case .none: return nil
+        default: return book.readingStatus.displayName
+        }
+    }
+
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
-            // Portada: pipeline imagen separado (URL → Kingfisher → caché → vista)
+            // Portada
             ZStack {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 12)
                     .fill(Color(.systemGray6))
 
                 if let url = book.thumbnailURL {
                     KFImage(url)
-                        .placeholder { ProgressView() }
+                        .placeholder {
+                            ProgressView()
+                                .tint(.secondary)
+                        }
                         .setProcessor(DownsamplingImageProcessor(size: Self.thumbnailSize))
                         .cancelOnDisappear(true)
                         .resizable()
                         .scaledToFill()
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else {
                     Image(systemName: "book.closed")
                         .font(.largeTitle)
@@ -41,10 +51,10 @@ struct LibraryCellView: View {
                 }
             }
             .aspectRatio(2/3, contentMode: .fit)
-            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+            .shadow(color: .black.opacity(0.12), radius: 6, x: 0, y: 3)
 
-            // Título y autor centrados, con altura fija para que todas las celdas tengan la misma altura
-            VStack(spacing: 2) {
+            // Título, autor y estado
+            VStack(spacing: 4) {
                 Text(book.title)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.primary)
@@ -58,13 +68,27 @@ struct LibraryCellView: View {
                         .lineLimit(1)
                         .multilineTextAlignment(.center)
                 }
+
+                if let status = readingStatusLabel {
+                    Text(status)
+                        .font(.caption2.weight(.medium))
+                        .textCase(.uppercase)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(Color.accentColor.opacity(0.12))
+                        )
+                        .foregroundStyle(Color.accentColor)
+                }
             }
-            .frame(maxWidth: .infinity, minHeight: 40, alignment: .top)
+            .frame(maxWidth: .infinity, minHeight: 72, alignment: .top)
         }
         .frame(maxWidth: .infinity, alignment: .top)
     }
 }
 
+// Preview de ejemplo
 private struct Sample {
     static let book = Book(
         id: UUID(),
@@ -79,12 +103,10 @@ private struct Sample {
         subtitle: "O ida y vuelta",
         language: "es",
         isFavorite: false,
-        readingStatus: .none
+        readingStatus: .reading
     )
 }
 
 #Preview {
     LibraryCellView(book: Sample.book)
 }
-
-

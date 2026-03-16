@@ -112,7 +112,6 @@ final class AddEditQuoteViewModel {
         }
 
         await MainActor.run { isSaving = true; errorMessage = nil }
-        defer { Task { @MainActor in isSaving = false } }
 
         do {
             let quote: Quote
@@ -127,7 +126,7 @@ final class AddEditQuoteViewModel {
                 )
             case .edit(let quoteId):
                 guard let existing = try await fetchQuoteByIdUseCase.execute(quoteId: quoteId) else {
-                    await MainActor.run { errorMessage = "No se encontró la cita" }
+                    await MainActor.run { errorMessage = "No se encontró la cita"; isSaving = false }
                     return
                 }
                 quote = Quote(
@@ -139,9 +138,9 @@ final class AddEditQuoteViewModel {
                 )
             }
             try await saveQuoteUseCase.execute(quote: quote)
-            await MainActor.run { errorMessage = nil }
+            await MainActor.run { errorMessage = nil; isSaving = false }
         } catch {
-            await MainActor.run { errorMessage = error.localizedDescription }
+            await MainActor.run { errorMessage = error.localizedDescription; isSaving = false }
         }
     }
 

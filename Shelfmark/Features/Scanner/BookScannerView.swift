@@ -23,14 +23,20 @@ struct BookScannerRepresentable: UIViewControllerRepresentable {
 
 struct BookScannerView: View {
     @Bindable var viewModel: BookScannerViewModel
+    @State private var lastScannedCode: String?
 
     var body: some View {
         ZStack {
-            
             BookScannerRepresentable { code in
-                Task { await viewModel.handleScannedCode(code) }
+                lastScannedCode = code
             }
             .ignoresSafeArea()
+            .task(id: lastScannedCode) {
+                if let code = lastScannedCode {
+                    await viewModel.handleScannedCode(code)
+                    await MainActor.run { lastScannedCode = nil }
+                }
+            }
 
             if case .loading = viewModel.state {
                 ZStack {

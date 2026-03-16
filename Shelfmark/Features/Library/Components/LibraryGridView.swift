@@ -13,12 +13,12 @@ struct LibraryGridView: View {
     let onDelete: (UUID) -> Void
     let hasMore: Bool
     let isLoadingNextPage: Bool
-    let onLoadMore: () -> Void
+    let onLoadMore: () async -> Void
 
+    // Grid adaptable: ajusta el número de columnas según el ancho disponible.
+    // Mínimo ~140pt por celda para mantener una portada legible.
     private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible())
+        GridItem(.adaptive(minimum: 140), spacing: 16)
     ]
 
     var body: some View {
@@ -33,10 +33,10 @@ struct LibraryGridView: View {
                         if sections.count > 1 {
                             Text(section.categoryName)
                                 .font(.headline)
-                                .padding(.horizontal, 16)
+                                .padding(.horizontal, 20)
                         }
 
-                        LazyVGrid(columns: columns, spacing: 20) {
+                        LazyVGrid(columns: columns, alignment: .center, spacing: 24) {
 
                             ForEach(section.books, id: \.id) { book in
                                 NavigationLink(value: book.id) {
@@ -51,7 +51,7 @@ struct LibraryGridView: View {
                             }
 
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 20)
                     }
 
                     if hasMore {
@@ -63,7 +63,7 @@ struct LibraryGridView: View {
                         } else {
                             Color.clear
                                 .frame(height: 1)
-                                .onAppear { onLoadMore() }
+                                .task { await onLoadMore() }
                         }
                     }
                 }
@@ -83,7 +83,7 @@ struct LibraryGridView: View {
             onDelete: { _ in },
             hasMore: false,
             isLoadingNextPage: false,
-            onLoadMore: {}
+            onLoadMore: { }
         )
     }
 }

@@ -42,7 +42,7 @@ struct ListsView: View {
                                 } else {
                                     Color.clear
                                         .frame(height: 1)
-                                        .onAppear { Task { await viewModel.loadNextPage() } }
+                                        .task { await viewModel.loadNextPage() }
                                 }
                             }
                         }
@@ -58,6 +58,7 @@ struct ListsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .background(Color.theme.mainBackground)
         .navigationTitle("Listas")
         .task {
             await viewModel.loadLists()

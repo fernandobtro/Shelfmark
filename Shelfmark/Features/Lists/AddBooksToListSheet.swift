@@ -21,6 +21,8 @@ struct AddBooksToListSheet: View {
 
     @State private var sheetState: SheetState = .loading
     @State private var searchText: String = ""
+    @State private var addTrigger = 0
+    @State private var bookIdToAdd: UUID?
 
     private var booksToShow: [Book] {
         guard case .loaded(let books) = sheetState else { return [] }
@@ -54,9 +56,8 @@ struct AddBooksToListSheet: View {
                         List {
                             ForEach(booksToShow, id: \.id) { book in
                                 Button {
-                                    Task {
-                                        await onAddBook(book.id)
-                                    }
+                                    bookIdToAdd = book.id
+                                    addTrigger += 1
                                 } label: {
                                     LibraryCellView(book: book)
                                 }
@@ -65,6 +66,12 @@ struct AddBooksToListSheet: View {
                         }
                         .listStyle(.plain)
                         .scrollDismissesKeyboard(.interactively)
+                        .task(id: addTrigger) {
+                            if addTrigger > 0, let id = bookIdToAdd {
+                                await onAddBook(id)
+                                await MainActor.run { bookIdToAdd = nil }
+                            }
+                        }
                     }
 
                 case .error(let message):

@@ -11,6 +11,7 @@ import Observation
 struct CreateListSheetView: View {
     @Bindable var viewModel: ListsViewModel
     var onDismiss: () -> Void
+    @State private var createTrigger = 0
 
     var body: some View {
         NavigationStack {
@@ -30,12 +31,15 @@ struct CreateListSheetView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Crear") {
-                        Task {
-                            await viewModel.createList()
-                            onDismiss()
-                        }
+                        createTrigger += 1
                     }
                     .disabled(viewModel.newListName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .task(id: createTrigger) {
+                if createTrigger > 0 {
+                    await viewModel.createList()
+                    onDismiss()
                 }
             }
         }

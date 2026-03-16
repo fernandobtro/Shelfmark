@@ -11,6 +11,7 @@ import Observation
 struct AddEditBookView: View {
     @Bindable var viewModel: AddEditBookViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var saveTrigger = 0
 
     var body: some View {
         NavigationStack {
@@ -75,14 +76,17 @@ struct AddEditBookView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") {
-                        Task {
-                            await viewModel.save()
-                            if viewModel.errorMessage == nil {
-                                dismiss()
-                            }
-                        }
+                        saveTrigger += 1
                     }
                     .disabled(viewModel.isSaving)
+                }
+            }
+            .task(id: saveTrigger) {
+                if saveTrigger > 0 {
+                    await viewModel.save()
+                    if viewModel.errorMessage == nil {
+                        dismiss()
+                    }
                 }
             }
         }

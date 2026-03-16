@@ -11,6 +11,8 @@ import Observation
 struct ReadingListDetailView: View {
     @Bindable var viewModel: ReadingListDetailViewModel
     let container: AppDIContainer
+    @State private var pendingRemoveBookId: UUID?
+    @State private var removeTrigger = 0
 
     var body: some View {
         Group {
@@ -34,7 +36,8 @@ struct ReadingListDetailView: View {
                                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                                 .contextMenu {
                                     Button("Quitar de la lista", role: .destructive) {
-                                        Task { await viewModel.removeBook(bookId: book.id) }
+                                        pendingRemoveBookId = book.id
+                                        removeTrigger += 1
                                     }
                                 }
                         }
@@ -72,6 +75,12 @@ struct ReadingListDetailView: View {
         .task {
             await viewModel.load()
         }
+        .task(id: removeTrigger) {
+            if removeTrigger > 0, let id = pendingRemoveBookId {
+                await viewModel.removeBook(bookId: id)
+                pendingRemoveBookId = nil
+            }
+        }
     }
 }
 
@@ -104,9 +113,9 @@ struct ReadingListDetailView: View {
         addBookToReadingListUseCase: PreviewAddBookToList(),
         removeBookFromReadingListUseCase: PreviewRemoveBookFromList()
     )
-    Task { await vm.load() }
     return NavigationStack {
         ReadingListDetailView(viewModel: vm, container: AppDIContainer())
+            .task { await vm.load() }
     }
 }
 

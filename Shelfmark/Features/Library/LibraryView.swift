@@ -10,8 +10,10 @@ import Foundation
 import Observation
 
 struct LibraryView: View {
-    
     @Bindable var viewModel: LibraryViewModel
+    @State private var retryTrigger = 0
+    @State private var pendingDeleteBookId: UUID?
+    @State private var deleteTrigger = 0
 
     var body: some View {
         Group {
@@ -31,6 +33,7 @@ struct LibraryView: View {
                 errorView(message: message)
             }
         }
+        .background(Color.theme.mainBackground)
         .navigationTitle("Mi Biblioteca")
         .safeAreaInset(edge: .top) {
             VStack(spacing: 12) {
@@ -58,7 +61,7 @@ struct LibraryView: View {
                 .presentationDragIndicator(.visible)
         }
         .dismissKeyboardOnTapOutside()
-        .task {
+        .task(id: retryTrigger) {
             await viewModel.loadLibrary()
         }
     }
@@ -97,12 +100,19 @@ struct LibraryView: View {
             LibraryGridView(
                 sections: viewModel.sectionedBooks,
                 onDelete: { bookId in
-                    Task { await viewModel.delete(bookId: bookId) }
+                    pendingDeleteBookId = bookId
+                    deleteTrigger += 1
                 },
                 hasMore: viewModel.hasMore,
                 isLoadingNextPage: viewModel.isLoadingNextPage,
-                onLoadMore: { Task { await viewModel.loadNextPage() } }
+                onLoadMore: { await viewModel.loadNextPage() }
             )
+            .task(id: deleteTrigger) {
+                if deleteTrigger > 0, let id = pendingDeleteBookId {
+                    await viewModel.delete(bookId: id)
+                    pendingDeleteBookId = nil
+                }
+            }
         }
     }
 
@@ -117,9 +127,7 @@ struct LibraryView: View {
                 .foregroundStyle(.secondary)
 
             Button("Reintentar") {
-                Task {
-                    await viewModel.loadLibrary()
-                }
+                retryTrigger += 1
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

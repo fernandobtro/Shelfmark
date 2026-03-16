@@ -15,6 +15,8 @@ struct BookDetailView: View {
     @State private var bookToEdit: Book?
     @State private var isShowingDeleteAlert = false
     @State private var isDeleting = false
+    @State private var retryTrigger = 0
+    @State private var deleteTrigger = 0
 
     var body: some View {
         Group {
@@ -46,12 +48,19 @@ struct BookDetailView: View {
             }
         }
         .sheet(item: $bookToEdit, onDismiss: {
-            Task { await viewModel.loadDetail() }
+            retryTrigger += 1
         }) { book in
             container.makeAddEditBookView(mode: .edit(existing: book))
         }
-        .task {
+        .task(id: retryTrigger) {
             await viewModel.loadDetail()
+        }
+        .task(id: deleteTrigger) {
+            if deleteTrigger > 0 {
+                await viewModel.delete()
+                await MainActor.run { isDeleting = false }
+                dismiss()
+            }
         }
     }
 
@@ -118,11 +127,7 @@ struct BookDetailView: View {
         .alert("Eliminar libro", isPresented: $isShowingDeleteAlert) {
             Button("Eliminar", role: .destructive) {
                 isDeleting = true
-                Task {
-                    await viewModel.delete()
-                    isDeleting = false
-                    dismiss()
-                }
+                deleteTrigger += 1
             }
             Button("Cancelar", role: .cancel) {}
         } message: {
@@ -148,9 +153,7 @@ struct BookDetailView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             Button("Reintentar") {
-                Task {
-                    await viewModel.loadDetail()
-                }
+                retryTrigger += 1
             }
             .buttonStyle(.borderedProminent)
         }

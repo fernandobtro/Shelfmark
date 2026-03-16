@@ -15,9 +15,14 @@ struct CustomTabBar: View {
     var body: some View {
         ZStack(alignment: .top) {
             RoundedRectangle(cornerRadius: 35)
-                .fill(Color(.systemBackground))
+                // Fondo ligeramente diferenciado para que el tab bar se lea sin romper la continuidad
+                .fill(Color.theme.secondaryBackground)
                 .frame(height: 70)
-                .shadow(color: .black.opacity(0.08),radius: 10, x: 0, y: -5)
+                .shadow(color: .black.opacity(0.14), radius: 10, x: 0, y: -6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 35)
+                        .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
+                )
                 .padding(.horizontal, 20)
             
             HStack(spacing: 0) {

@@ -11,6 +11,8 @@ import Observation
 struct QuotesView: View {
     @Bindable var viewModel: QuotesViewModel
     let container: AppDIContainer
+    @State private var pendingDeleteQuoteId: UUID?
+    @State private var deleteTrigger = 0
 
     var body: some View {
         Group {
@@ -45,7 +47,8 @@ struct QuotesView: View {
                                     }
                                     .contextMenu {
                                         Button("Eliminar", role: .destructive) {
-                                            Task { await viewModel.deleteQuote(quoteId: quote.id) }
+                                            pendingDeleteQuoteId = quote.id
+                                            deleteTrigger += 1
                                         }
                                     }
                                 }
@@ -60,13 +63,19 @@ struct QuotesView: View {
                                 } else {
                                     Color.clear
                                         .frame(height: 1)
-                                        .onAppear { Task { await viewModel.loadNextPage() } }
+                                        .task { await viewModel.loadNextPage() }
                                 }
                             }
                         }
                     }
                     .listStyle(.insetGrouped)
                     .scrollDismissesKeyboard(.interactively)
+                    .task(id: deleteTrigger) {
+                        if deleteTrigger > 0, let id = pendingDeleteQuoteId {
+                            await viewModel.deleteQuote(quoteId: id)
+                            pendingDeleteQuoteId = nil
+                        }
+                    }
                 }
 
             case .error(let message):
@@ -78,6 +87,7 @@ struct QuotesView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .background(Color.theme.mainBackground)
         .navigationTitle("Citas")
         .searchable(text: $viewModel.searchText, prompt: "Buscar por libro, autor o texto")
         .safeAreaInset(edge: .top, spacing: 0) {

@@ -15,6 +15,8 @@ struct QuoteDetailView: View {
 
     @State private var isPresentingEditSheet = false
     @State private var showDeleteConfirmation = false
+    @State private var loadTrigger = 0
+    @State private var deleteTrigger = 0
 
     var body: some View {
         Group {
@@ -82,16 +84,14 @@ struct QuoteDetailView: View {
         }
         .alert("Eliminar cita", isPresented: $showDeleteConfirmation) {
             Button("Eliminar", role: .destructive) {
-                Task {
-                    await viewModel.deleteQuote()
-                }
+                deleteTrigger += 1
             }
             Button("Cancelar", role: .cancel) {}
         } message: {
             Text("¿Seguro que quieres eliminar esta cita?")
         }
         .sheet(isPresented: $isPresentingEditSheet, onDismiss: {
-            Task { await viewModel.load() }
+            loadTrigger += 1
         }) {
             AddEditQuoteView(
                 viewModel: container.makeAddEditQuoteViewModel(mode: AddEditQuoteMode.edit(quoteId: viewModel.quoteId)),
@@ -103,8 +103,13 @@ struct QuoteDetailView: View {
                 dismiss()
             }
         }
-        .task {
+        .task(id: loadTrigger) {
             await viewModel.load()
+        }
+        .task(id: deleteTrigger) {
+            if deleteTrigger > 0 {
+                await viewModel.deleteQuote()
+            }
         }
     }
 

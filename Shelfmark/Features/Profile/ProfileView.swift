@@ -18,6 +18,7 @@ struct ProfileView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .dismissKeyboardOnTapOutside()
+        .background(Color.theme.mainBackground)
         .navigationTitle("Perfil")
         .task { await viewModel.load() }
         .onDisappear { viewModel.saveDisplayName(viewModel.displayName) }

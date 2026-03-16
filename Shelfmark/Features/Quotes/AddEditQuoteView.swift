@@ -14,6 +14,8 @@ struct AddEditQuoteView: View {
     var onDelete: (() -> Void)?
 
     @State private var showDeleteConfirmation = false
+    @State private var saveTrigger = 0
+    @State private var deleteTrigger = 0
 
     var body: some View {
         NavigationStack {
@@ -73,25 +75,31 @@ struct AddEditQuoteView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") {
-                        Task {
-                            await viewModel.save()
-                            if viewModel.errorMessage == nil {
-                                dismiss()
-                            }
-                        }
+                        saveTrigger += 1
                     }
                     .disabled(viewModel.isSaving || viewModel.isLoading)
                 }
             }
+            .task(id: saveTrigger) {
+                if saveTrigger > 0 {
+                    await viewModel.save()
+                    if viewModel.errorMessage == nil {
+                        dismiss()
+                    }
+                }
+            }
+            .task(id: deleteTrigger) {
+                if deleteTrigger > 0 {
+                    await viewModel.deleteQuote()
+                    if viewModel.errorMessage == nil {
+                        onDelete?()
+                        dismiss()
+                    }
+                }
+            }
             .alert("Eliminar cita", isPresented: $showDeleteConfirmation) {
                 Button("Eliminar", role: .destructive) {
-                    Task {
-                        await viewModel.deleteQuote()
-                        if viewModel.errorMessage == nil {
-                            onDelete?()
-                            dismiss()
-                        }
-                    }
+                    deleteTrigger += 1
                 }
                 Button("Cancelar", role: .cancel) {}
             } message: {
