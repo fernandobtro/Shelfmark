@@ -18,5 +18,9 @@ final class FetchLibraryUseCaseImpl: FetchLibraryUseCaseProtocol {
     func execute() async throws -> [Book] {
         try await repository.fetchAll()
     }
+    
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] {
+        try await repository.fetchPaginated(limit: limit, offset: offset)
+    }
 }
 

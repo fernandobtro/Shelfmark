@@ -8,16 +8,10 @@
 import Foundation
 import Observation
 
-/// Los únicos estados posibles de la pantalla de biblioteca.
-/// La pantalla está siempre en uno solo; no puede estar "cargando" y "con datos" a la vez.
 enum LibraryState: Equatable {
-    /// Aún no se ha pedido la lista.
     case idle
-    /// Se está pidiendo la lista al use case.
     case loading
-    /// Ya tenemos la lista; el array son los libros a mostrar.
     case loaded([Book])
-    /// Algo falló; el String es el mensaje para el usuario.
     case error(String)
 }
 
@@ -28,16 +22,32 @@ final class LibraryViewModel {
     var groupOption: GroupOption = .none
     var isShowingSortMenu: Bool = false
     var filterOption: FilterOption = .all
+    var searchText: String = ""
     
+    let pageSize = 20
+    var currentOffset = 0
+    var hasMore = true
+    var isLoadingNextPage = false
+
     var sectionedBooks: [LibrarySection] {
         guard case .loaded(let books) = state else { return [] }
 
-        let filteredBooks = books.filter { book in
+        let searchFiltered = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let booksAfterSearch = searchFiltered.isEmpty ? books : books.filter { book in
+            let query = searchFiltered.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current)
+            let titleMatch = book.title.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(query)
+            let authorMatch = book.authors.contains { author in
+                author.name.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(query)
+            }
+            return titleMatch || authorMatch
+        }
+
+        let filteredBooks = booksAfterSearch.filter { book in
             switch filterOption {
             case .all:
                 return true
             case .reading:
-                return book.readingStatus == .reading
+                return book.readingStatus == ReadingStatus.reading
             case .favorites:
                 return book.isFavorite
             }
@@ -78,12 +88,26 @@ final class LibraryViewModel {
         self.deleteBookUseCase = deleteBookUseCase
     }
 
+    /// Libera los datos en memoria cuando el usuario sale de la pestaña Biblioteca.
+    func unload() {
+        state = .idle
+        currentOffset = 0
+        hasMore = true
+    }
+
     func loadLibrary() async {
         state = .loading
+        currentOffset = 0
+        hasMore = true
+        
         do {
-            let books = try await fetchLibraryUseCase.execute()
+            let books = try await fetchLibraryUseCase.executePaginated(limit: pageSize, offset: 0)
             await MainActor.run {
                 state = .loaded(books)
+                currentOffset = books.count
+                if books.count < pageSize {
+                    hasMore = false
+                }
             }
         } catch {
             await MainActor.run {
@@ -91,7 +115,35 @@ final class LibraryViewModel {
             }
         }
     }
-
+    
+    func loadNextPage() async {
+        guard !isLoadingNextPage, hasMore else { return }
+        
+        guard case .loaded(let existing) = state else { return }
+        
+        isLoadingNextPage = true
+        
+        defer { isLoadingNextPage = false }
+        
+        do {
+            let newPage = try await fetchLibraryUseCase.executePaginated(
+                limit: pageSize,
+                offset: currentOffset
+            )
+            await MainActor.run {
+                state = .loaded(existing + newPage)
+                
+                currentOffset += newPage.count
+                
+                if newPage.count < pageSize {
+                    hasMore = false
+                }
+            }
+        } catch {
+            print("Error cargando página: \(error.localizedDescription)")
+        }
+    }
+    
     func delete(bookId: UUID) async {
         do {
             try await deleteBookUseCase.execute(bookId: bookId)

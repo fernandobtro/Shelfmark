@@ -126,6 +126,7 @@
 			);
 			name = Shelfmark;
 			packageProductDependencies = (
+				3979D8572F63AB00001E5508 /* Kingfisher */,
 			);
 			productName = Shelfmark;
 			productReference = 39ACF2362F58BEFE00C56F04 /* Shelfmark.app */;
@@ -493,6 +494,14 @@
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3979D8572F63AB00001E5508 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3979D8562F63AB00001E5507 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 39ACF22E2F58BEFE00C56F04 /* Project object */;
 }

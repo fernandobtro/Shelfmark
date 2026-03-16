@@ -42,3 +42,18 @@ struct CameraQuoteView: UIViewControllerRepresentable {
         }
     }
 }
+
+// MARK: - Preview (la cámara no está disponible en el canvas)
+
+#Preview("Cámara (placeholder)") {
+    VStack(spacing: 8) {
+        Image(systemName: "camera.fill")
+            .font(.largeTitle)
+            .foregroundStyle(.secondary)
+        Text("Vista de cámara")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(Color.black.opacity(0.1))
+}

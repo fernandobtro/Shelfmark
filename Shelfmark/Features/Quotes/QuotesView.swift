@@ -20,16 +20,16 @@ struct QuotesView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             case .loaded:
-                if viewModel.sectionedQuotes.isEmpty {
+                if viewModel.filteredSectionedQuotes.isEmpty {
                     ContentUnavailableView(
-                        "Sin citas",
-                        systemImage: "quote.closing",
-                        description: Text("Añade citas con el botón de la barra.")
+                        viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Sin citas" : "Ningún resultado",
+                        systemImage: viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "quote.closing" : "magnifyingglass",
+                        description: Text(viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Añade citas con el botón de la barra." : "Prueba con otro término.")
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
-                        ForEach(Array(viewModel.sectionedQuotes.enumerated()), id: \.offset) { _, section in
+                        ForEach(Array(viewModel.filteredSectionedQuotes.enumerated()), id: \.offset) { _, section in
                             Section(section.key) {
                                 ForEach(section.quotes, id: \.id) { quote in
                                     NavigationLink(value: quote.id) {
@@ -51,8 +51,22 @@ struct QuotesView: View {
                                 }
                             }
                         }
+                        if viewModel.hasMore {
+                            Section {
+                                if viewModel.isLoadingNextPage {
+                                    ProgressView()
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                } else {
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .onAppear { Task { await viewModel.loadNextPage() } }
+                                }
+                            }
+                        }
                     }
                     .listStyle(.insetGrouped)
+                    .scrollDismissesKeyboard(.interactively)
                 }
 
             case .error(let message):
@@ -65,6 +79,7 @@ struct QuotesView: View {
             }
         }
         .navigationTitle("Citas")
+        .searchable(text: $viewModel.searchText, prompt: "Buscar por libro, autor o texto")
         .safeAreaInset(edge: .top, spacing: 0) {
             Picker("Agrupar", selection: Binding(
                 get: { viewModel.grouping },
@@ -76,6 +91,7 @@ struct QuotesView: View {
             .pickerStyle(.segmented)
             .padding()
         }
+        .dismissKeyboardOnTapOutside()
         .task {
             await viewModel.loadQuotes()
         }
@@ -119,11 +135,17 @@ struct QuotesView: View {
 private struct PreviewFetchQuotesUseCase: FetchQuotesUseCaseProtocol {
     let quotes: [Quote]
     func execute() async throws -> [Quote] { quotes }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Quote] {
+        Array(quotes.dropFirst(offset).prefix(limit))
+    }
 }
 
 private struct PreviewFetchLibraryUseCase: FetchLibraryUseCaseProtocol {
     let books: [Book]
     func execute() async throws -> [Book] { books }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] {
+        Array(books.dropFirst(offset).prefix(limit))
+    }
 }
 
 private struct PreviewDeleteQuoteUseCase: DeleteQuoteUseCaseProtocol {

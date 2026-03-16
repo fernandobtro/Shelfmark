@@ -37,6 +37,11 @@ final class ProfileViewModel {
         self.fetchReadingListsUseCase = fetchReadingListsUseCase
     }
 
+    /// Libera el estado cargado cuando el usuario sale de la pestaña Perfil.
+    func unload() {
+        state = .idle
+    }
+
     func load() async {
         await MainActor.run {
             state = .loading

@@ -63,16 +63,33 @@ struct QuoteScannerView: View {
                 onDelete: nil
             )
         }
+        .task(id: selectedImage?.hashValue) {
+            guard let image = selectedImage,
+                  let downscaled = Self.downscaleForOCR(image) else { return }
+            await viewModel.processImage(downscaled)
+            await MainActor.run { selectedImage = nil }
+        }
     }
 
     private var cameraLayer: some View {
         CameraQuoteView(selectedImage: $selectedImage)
             .ignoresSafeArea()
             .onChange(of: selectedImage) { _, newImage in
-                guard let image = newImage else { return }
+                guard newImage != nil else { return }
                 showCamera = false
-                Task { await viewModel.processImage(image) }
             }
+    }
+
+    /// Redimensiona la imagen para OCR para reducir uso de memoria (cámara puede ser 4K+).
+    private static func downscaleForOCR(_ image: UIImage, maxDimension: CGFloat = 1200) -> UIImage? {
+        let size = image.size
+        guard size.width > maxDimension || size.height > maxDimension else { return image }
+        let ratio = min(maxDimension / size.width, maxDimension / size.height)
+        let newSize = CGSize(width: size.width * ratio, height: size.height * ratio)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
     }
 
     @ViewBuilder
@@ -242,4 +259,12 @@ struct QuoteScannerView: View {
             await MainActor.run { cameraAuthorized = true }
         }
     }
+}
+
+// MARK: - Preview
+
+#Preview("Escáner de cita (mock)") {
+    let container = AppDIContainer()
+    let vm = container.makeQuoteScannerViewModel()
+    return QuoteScannerView(viewModel: vm, container: container)
 }

@@ -21,7 +21,16 @@ class SwiftDataQuoteRepository: QuoteRepositoryProtocol {
         let entities = try modelContext.fetch(descriptor)
         return entities.map { QuotePersistenceMapper.toDomain($0) }
     }
-    
+
+    func fetchPaginated(limit: Int, offset: Int) async throws -> [Quote] {
+        var descriptor = FetchDescriptor<QuoteEntity>()
+        descriptor.fetchLimit = limit
+        descriptor.fetchOffset = offset
+        descriptor.sortBy = [SortDescriptor(\.createdAt, order: .reverse)]
+        let entities = try modelContext.fetch(descriptor)
+        return entities.map { QuotePersistenceMapper.toDomain($0) }
+    }
+
     func fetch(by id: UUID) async throws -> Quote? {
         let predicate = #Predicate<QuoteEntity> { $0.id == id }
         let descriptor = FetchDescriptor<QuoteEntity>(predicate: predicate)

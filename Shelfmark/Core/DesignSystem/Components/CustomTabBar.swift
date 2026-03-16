@@ -34,6 +34,7 @@ struct CustomTabBar: View {
             
             plusButton
         }
+        .ignoresSafeArea(.keyboard)
     }
     
     private var plusButton: some View {

@@ -18,4 +18,8 @@ final class FetchQuotesUseCaseImpl: FetchQuotesUseCaseProtocol {
     func execute() async throws -> [Quote] {
         try await repository.fetchAll()
     }
+
+    func executePaginated(limit: Int, offset: Int) async throws -> [Quote] {
+        try await repository.fetchPaginated(limit: limit, offset: offset)
+    }
 }

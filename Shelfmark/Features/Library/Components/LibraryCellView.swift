@@ -7,9 +7,13 @@
 
 import Foundation
 import SwiftUI
+import Kingfisher
 
 struct LibraryCellView: View {
     let book: Book
+
+    /// Tamaño de miniatura para caché y downsampling (evita retener imágenes a resolución completa).
+    private static let thumbnailSize = CGSize(width: 200, height: 300)
 
     private var authorsText: String {
         book.authors.map(\.name).joined(separator: ", ")
@@ -17,30 +21,19 @@ struct LibraryCellView: View {
 
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
-            // Portada: ancho = columna del grid; altura por 2:3 (proporción conservada)
+            // Portada: pipeline imagen separado (URL → Kingfisher → caché → vista)
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color(.systemGray6))
 
                 if let url = book.thumbnailURL {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            ProgressView()
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .clipped()
-                        case .failure:
-                            Image(systemName: "book.closed")
-                                .font(.largeTitle)
-                                .foregroundStyle(.secondary)
-                        @unknown default:
-                            EmptyView()
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    KFImage(url)
+                        .placeholder { ProgressView() }
+                        .setProcessor(DownsamplingImageProcessor(size: Self.thumbnailSize))
+                        .cancelOnDisappear(true)
+                        .resizable()
+                        .scaledToFill()
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 } else {
                     Image(systemName: "book.closed")
                         .font(.largeTitle)

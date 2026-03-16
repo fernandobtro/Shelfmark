@@ -45,3 +45,14 @@ struct BookScannerView: View {
         }
     }
 }
+
+// MARK: - Preview
+
+#Preview("Escáner (mock idle)") {
+    let vm = BookScannerViewModel(lookUpByISBNUseCase: PreviewLookUpByISBNUseCase())
+    return BookScannerView(viewModel: vm)
+}
+
+private struct PreviewLookUpByISBNUseCase: LookUpByISBNUseCaseProtocol {
+    func execute(isbn: String) async throws -> Book? { nil }
+}

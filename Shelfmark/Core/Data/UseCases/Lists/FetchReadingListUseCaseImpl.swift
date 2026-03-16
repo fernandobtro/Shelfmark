@@ -17,4 +17,8 @@ final class FetchReadingListUseCaseImpl: FetchReadingListUseCaseProtocol {
     func execute() async throws -> [ReadingList] {
         try await repository.fetchAllLists()
     }
+
+    func executePaginated(limit: Int, offset: Int) async throws -> [ReadingList] {
+        try await repository.fetchListsPaginated(limit: limit, offset: offset)
+    }
 }

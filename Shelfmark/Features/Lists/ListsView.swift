@@ -33,6 +33,19 @@ struct ListsView: View {
                                 Text(list.name)
                             }
                         }
+                        if viewModel.hasMore {
+                            Section {
+                                if viewModel.isLoadingNextPage {
+                                    ProgressView()
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                } else {
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .onAppear { Task { await viewModel.loadNextPage() } }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -93,10 +106,16 @@ struct ListsView: View {
 private struct PreviewFetchListsUseCase: FetchReadingListUseCaseProtocol {
     let lists: [ReadingList]
     func execute() async throws -> [ReadingList] { lists }
+    func executePaginated(limit: Int, offset: Int) async throws -> [ReadingList] {
+        Array(lists.dropFirst(offset).prefix(limit))
+    }
 }
 
 private struct PreviewFetchListsUseCaseThrowing: FetchReadingListUseCaseProtocol {
     func execute() async throws -> [ReadingList] {
+        throw NSError(domain: "Preview", code: 1, userInfo: [NSLocalizedDescriptionKey: "No se pudieron cargar las listas."])
+    }
+    func executePaginated(limit: Int, offset: Int) async throws -> [ReadingList] {
         throw NSError(domain: "Preview", code: 1, userInfo: [NSLocalizedDescriptionKey: "No se pudieron cargar las listas."])
     }
 }

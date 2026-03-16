@@ -21,9 +21,20 @@ final class AddEditQuoteViewModel {
     var pageReference: String = ""
 
     var books: [Book] = []
+    var searchText: String = ""
     var isSaving = false
     var errorMessage: String?
     var isLoading = true
+
+    var filteredBooks: [Book] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return books }
+        let normalized = query.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current)
+        return books.filter { book in
+            book.title.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(normalized)
+            || book.authors.contains { $0.name.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(normalized) }
+        }
+    }
 
     var isEditMode: Bool {
         if case .edit = mode { return true }

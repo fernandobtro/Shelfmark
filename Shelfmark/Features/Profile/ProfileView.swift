@@ -16,6 +16,8 @@ struct ProfileView: View {
             statsSection
             settingsSection
         }
+        .scrollDismissesKeyboard(.interactively)
+        .dismissKeyboardOnTapOutside()
         .navigationTitle("Perfil")
         .task { await viewModel.load() }
         .onDisappear { viewModel.saveDisplayName(viewModel.displayName) }
@@ -84,7 +86,7 @@ private struct StatRow: View {
     }
 }
 
-#Preview {
+#Preview("Vacío") {
     NavigationStack {
         ProfileView(viewModel: ProfileViewModel(
             userProfileRepository: PreviewUserProfileRepository(),
@@ -95,19 +97,63 @@ private struct StatRow: View {
     }
 }
 
+#Preview("Con estadísticas") {
+    let vm = ProfileViewModel(
+        userProfileRepository: PreviewUserProfileRepositoryWithName(),
+        fetchLibraryUseCase: PreviewProfileFetchLibraryWithData(),
+        fetchQuotesUseCase: PreviewProfileFetchQuotesWithData(),
+        fetchReadingListsUseCase: PreviewProfileFetchListsWithData()
+    )
+    return NavigationStack {
+        ProfileView(viewModel: vm)
+            .task { await vm.load() }
+    }
+}
+
 private struct PreviewUserProfileRepository: UserProfileRepositoryProtocol {
     func getDisplayName() -> String { "" }
     func setDisplayName(_ name: String) {}
 }
 
+private struct PreviewUserProfileRepositoryWithName: UserProfileRepositoryProtocol {
+    func getDisplayName() -> String { "Fernando" }
+    func setDisplayName(_ name: String) {}
+}
+
 private struct PreviewFetchLibraryForProfile: FetchLibraryUseCaseProtocol {
     func execute() async throws -> [Book] { [] }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] { [] }
+}
+
+private struct PreviewProfileFetchLibraryWithData: FetchLibraryUseCaseProtocol {
+    func execute() async throws -> [Book] { PreviewHelpers.previewBooks }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] {
+        Array(PreviewHelpers.previewBooks.dropFirst(offset).prefix(limit))
+    }
 }
 
 private struct PreviewFetchQuotesForProfile: FetchQuotesUseCaseProtocol {
     func execute() async throws -> [Quote] { [] }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Quote] { [] }
+}
+
+private struct PreviewProfileFetchQuotesWithData: FetchQuotesUseCaseProtocol {
+    let quotes = [PreviewHelpers.previewQuote(bookId: PreviewHelpers.previewBook1.id)]
+    func execute() async throws -> [Quote] { quotes }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Quote] {
+        Array(quotes.dropFirst(offset).prefix(limit))
+    }
 }
 
 private struct PreviewFetchListsForProfile: FetchReadingListUseCaseProtocol {
     func execute() async throws -> [ReadingList] { [] }
+    func executePaginated(limit: Int, offset: Int) async throws -> [ReadingList] { [] }
+}
+
+private struct PreviewProfileFetchListsWithData: FetchReadingListUseCaseProtocol {
+    let lists = [PreviewHelpers.previewReadingList]
+    func execute() async throws -> [ReadingList] { lists }
+    func executePaginated(limit: Int, offset: Int) async throws -> [ReadingList] {
+        Array(lists.dropFirst(offset).prefix(limit))
+    }
 }

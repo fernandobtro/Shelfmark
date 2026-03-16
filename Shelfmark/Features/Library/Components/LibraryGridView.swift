@@ -11,7 +11,10 @@ import SwiftUI
 struct LibraryGridView: View {
     let sections: [LibrarySection]
     let onDelete: (UUID) -> Void
-    
+    let hasMore: Bool
+    let isLoadingNextPage: Bool
+    let onLoadMore: () -> Void
+
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12),
@@ -23,7 +26,6 @@ struct LibraryGridView: View {
             EmptyView()
         } else {
             ScrollView {
-
                 LazyVStack(alignment: .leading, spacing: 24) {
 
                     ForEach(sections) { section in
@@ -51,8 +53,37 @@ struct LibraryGridView: View {
                         }
                         .padding(.horizontal, 16)
                     }
+
+                    if hasMore {
+                        if isLoadingNextPage {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .padding()
+                        } else {
+                            Color.clear
+                                .frame(height: 1)
+                                .onAppear { onLoadMore() }
+                        }
+                    }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
         }
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    let section = LibrarySection(categoryName: "Todos", books: PreviewHelpers.previewBooks)
+    return NavigationStack {
+        LibraryGridView(
+            sections: [section],
+            onDelete: { _ in },
+            hasMore: false,
+            isLoadingNextPage: false,
+            onLoadMore: {}
+        )
     }
 }

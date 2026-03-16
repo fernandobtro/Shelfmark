@@ -30,12 +30,12 @@ private extension LibraryHeaderView {
             viewModel.selectFilter(option)
         }
         .font(.subheadline.weight(.semibold))
-        .foregroundColor(isSelected ? Color.white : Color.primary)
+        .foregroundColor(isSelected ? Color.white : Color.secondary)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(isSelected ? Color.theme.textPrimary : Color.clear)
+                .fill(isSelected ? Color.theme.primaryGreen : Color.clear)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
@@ -43,5 +43,24 @@ private extension LibraryHeaderView {
         )
         .buttonStyle(PlainButtonStyle())
     }
+}
+
+// MARK: - Preview
+
+#Preview {
+    let mockFetch = PreviewHeaderFetchUseCase()
+    let mockDelete = PreviewHeaderDeleteUseCase()
+    let vm = LibraryViewModel(fetchLibraryUseCase: mockFetch, deleteBookUseCase: mockDelete)
+    return LibraryHeaderView(viewModel: vm)
+        .padding()
+}
+
+private struct PreviewHeaderFetchUseCase: FetchLibraryUseCaseProtocol {
+    func execute() async throws -> [Book] { [] }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] { [] }
+}
+
+private struct PreviewHeaderDeleteUseCase: DeleteBookUseCaseProtocol {
+    func execute(bookId: UUID) async throws {}
 }
 

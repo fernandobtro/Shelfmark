@@ -21,7 +21,16 @@ class SwiftDataReadingListRepository: ReadingListRepositoryProtocol {
         let entities: [ReadingListEntity] = try modelContext.fetch(descriptor)
         return entities.map(ReadingListPersistenceMapper.toDomain)
     }
-    
+
+    func fetchListsPaginated(limit: Int, offset: Int) async throws -> [ReadingList] {
+        var descriptor = FetchDescriptor<ReadingListEntity>()
+        descriptor.fetchLimit = limit
+        descriptor.fetchOffset = offset
+        descriptor.sortBy = [SortDescriptor(\.createdAt, order: .reverse)]
+        let entities: [ReadingListEntity] = try modelContext.fetch(descriptor)
+        return entities.map(ReadingListPersistenceMapper.toDomain)
+    }
+
     func createList(name: String) async throws -> ReadingList {
         let entity = ReadingListEntity(
             id: UUID(),

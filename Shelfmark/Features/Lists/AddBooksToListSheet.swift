@@ -20,10 +20,18 @@ struct AddBooksToListSheet: View {
     }
 
     @State private var sheetState: SheetState = .loading
+    @State private var searchText: String = ""
 
     private var booksToShow: [Book] {
         guard case .loaded(let books) = sheetState else { return [] }
-        return books.filter { !bookIdsAlreadyInList.contains($0.id) }
+        let available = books.filter { !bookIdsAlreadyInList.contains($0.id) }
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return available }
+        let normalized = query.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current)
+        return available.filter { book in
+            book.title.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(normalized)
+            || book.authors.contains { $0.name.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(normalized) }
+        }
     }
 
     var body: some View {
@@ -56,6 +64,7 @@ struct AddBooksToListSheet: View {
                             }
                         }
                         .listStyle(.plain)
+                        .scrollDismissesKeyboard(.interactively)
                     }
 
                 case .error(let message):
@@ -69,6 +78,8 @@ struct AddBooksToListSheet: View {
             }
             .navigationTitle("Añadir a la lista")
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "Buscar por título o autor")
+            .dismissKeyboardOnTapOutside()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Listo") {
@@ -94,5 +105,23 @@ struct AddBooksToListSheet: View {
                 sheetState = .error(error.localizedDescription)
             }
         }
+    }
+}
+
+// MARK: - Preview
+
+#Preview("Añadir libros (con datos mock)") {
+    AddBooksToListSheet(
+        fetchLibraryUseCase: PreviewAddBooksFetchUseCase(),
+        bookIdsAlreadyInList: [],
+        onAddBook: { _ in },
+        onDismiss: {}
+    )
+}
+
+private struct PreviewAddBooksFetchUseCase: FetchLibraryUseCaseProtocol {
+    func execute() async throws -> [Book] { PreviewHelpers.previewBooks }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] {
+        Array(PreviewHelpers.previewBooks.dropFirst(offset).prefix(limit))
     }
 }

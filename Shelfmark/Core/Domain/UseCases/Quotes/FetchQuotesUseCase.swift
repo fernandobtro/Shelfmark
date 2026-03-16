@@ -9,4 +9,5 @@ import Foundation
 
 protocol FetchQuotesUseCaseProtocol {
     func execute() async throws -> [Quote]
+    func executePaginated(limit: Int, offset: Int) async throws -> [Quote]
 }

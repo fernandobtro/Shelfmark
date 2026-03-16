@@ -63,6 +63,17 @@ class SwiftDataBookRepository: BookRepositoryProtocol {
         }
     }
     
+    func fetchPaginated(limit: Int, offset: Int) async throws -> [Book] {
+        var descriptor = FetchDescriptor<BookEntity>()
+        
+        descriptor.fetchLimit = limit
+        descriptor.fetchOffset = offset
+        
+        descriptor.sortBy = [SortDescriptor(\.title, order: .forward)]
+        
+        let entities = try modelContext.fetch(descriptor)
+        return entities.map { BookPersistenceMapper.toDomain($0) }
+    }
     func fetchBook(by id: UUID) async throws -> Book? {
         let predicate = #Predicate<BookEntity> { $0.id == id }
         let descriptor = FetchDescriptor<BookEntity>(predicate: predicate)

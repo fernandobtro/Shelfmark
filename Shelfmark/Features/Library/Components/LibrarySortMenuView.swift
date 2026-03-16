@@ -81,3 +81,21 @@ extension LibrarySortMenuView {
     }
 }
 
+// MARK: - Preview
+
+#Preview {
+    let mockFetch = PreviewSortMenuFetchUseCase()
+    let mockDelete = PreviewSortMenuDeleteUseCase()
+    let vm = LibraryViewModel(fetchLibraryUseCase: mockFetch, deleteBookUseCase: mockDelete)
+    return LibrarySortMenuView(viewModel: vm)
+}
+
+private struct PreviewSortMenuFetchUseCase: FetchLibraryUseCaseProtocol {
+    func execute() async throws -> [Book] { [] }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] { [] }
+}
+
+private struct PreviewSortMenuDeleteUseCase: DeleteBookUseCaseProtocol {
+    func execute(bookId: UUID) async throws {}
+}
+

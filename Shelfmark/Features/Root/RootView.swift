@@ -56,6 +56,15 @@ struct RootView: View {
                 }
             )
         }
+        .onChange(of: selectedTab) { oldTab, newTab in
+            guard oldTab != newTab else { return }
+            switch oldTab {
+            case .library: libraryViewModel.unload()
+            case .quotes: quotesViewModel.unload()
+            case .lists: listsViewModel.unload()
+            case .profile: profileViewModel.unload()
+            }
+        }
         .confirmationDialog("Añadir libro", isPresented: $showAddOptionsDialog, titleVisibility: .visible) {
             Button("Escanear código de barras") {
                 scannerViewModel = container.makeBookScannerViewModel()

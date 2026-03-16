@@ -64,6 +64,8 @@ struct AddEditBookView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
+            .dismissKeyboardOnTapOutside()
             .navigationTitle(viewModel.navigationTitle)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -85,5 +87,21 @@ struct AddEditBookView: View {
             }
         }
     }
+}
+
+// MARK: - Previews
+
+#Preview("Nuevo libro") {
+    let vm = AddEditBookViewModel(mode: .add, saveBookUseCase: PreviewSaveBookUseCase())
+    return AddEditBookView(viewModel: vm)
+}
+
+#Preview("Editar libro") {
+    let vm = AddEditBookViewModel(mode: .edit(existing: PreviewHelpers.previewBook1), saveBookUseCase: PreviewSaveBookUseCase())
+    return AddEditBookView(viewModel: vm)
+}
+
+private struct PreviewSaveBookUseCase: SaveBookUseCaseProtocol {
+    func execute(_ book: Book) async throws {}
 }
 

@@ -31,7 +31,7 @@ struct AddEditQuoteView: View {
                         Section("Libro") {
                             Picker("Libro", selection: $viewModel.selectedBookId) {
                                 Text("Selecciona un libro").tag(nil as UUID?)
-                                ForEach(viewModel.books, id: \.id) { book in
+                                ForEach(viewModel.filteredBooks, id: \.id) { book in
                                     Text(book.title).tag(book.id as UUID?)
                                 }
                             }
@@ -58,10 +58,13 @@ struct AddEditQuoteView: View {
                             }
                         }
                     }
+                    .scrollDismissesKeyboard(.interactively)
                 }
             }
+            .dismissKeyboardOnTapOutside()
             .navigationTitle(viewModel.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $viewModel.searchText, prompt: "Buscar libro")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") {
@@ -133,6 +136,7 @@ private struct PreviewFetchQuoteByIdUseCase: FetchQuoteByIdUseCaseProtocol {
 
 private struct PreviewFetchLibraryForQuoteUseCase: FetchLibraryUseCaseProtocol {
     func execute() async throws -> [Book] { [] }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] { [] }
 }
 
 private struct PreviewDeleteQuoteForQuoteUseCase: DeleteQuoteUseCaseProtocol {

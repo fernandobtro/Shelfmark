@@ -22,6 +22,11 @@ final class ListsViewModel {
     var newListName: String = ""
     var isPresentingCreateSheet: Bool = false
 
+    let pageSize = 20
+    var currentOffset = 0
+    var hasMore = true
+    var isLoadingNextPage = false
+
     private let fetchReadingListsUseCase: FetchReadingListUseCaseProtocol
     private let createReadingListUseCase: CreateReadingListUseCaseProtocol
 
@@ -33,18 +38,49 @@ final class ListsViewModel {
         self.createReadingListUseCase = createReadingListUseCase
     }
 
+    /// Libera las listas en memoria cuando el usuario sale de la pestaña Listas.
+    func unload() {
+        state = .idle
+        currentOffset = 0
+        hasMore = true
+    }
+
     func loadLists() async {
         state = .loading
-
+        currentOffset = 0
+        hasMore = true
         do {
-            let lists = try await fetchReadingListsUseCase.execute()
+            let lists = try await fetchReadingListsUseCase.executePaginated(limit: pageSize, offset: 0)
             await MainActor.run {
                 state = .loaded(lists)
+                currentOffset = lists.count
+                if lists.count < pageSize {
+                    hasMore = false
+                }
             }
         } catch {
             await MainActor.run {
                 state = .error("No se pudieron cargar las listas: \(error.localizedDescription)")
             }
+        }
+    }
+
+    func loadNextPage() async {
+        guard !isLoadingNextPage, hasMore else { return }
+        guard case .loaded(let existing) = state else { return }
+        isLoadingNextPage = true
+        defer { isLoadingNextPage = false }
+        do {
+            let newPage = try await fetchReadingListsUseCase.executePaginated(limit: pageSize, offset: currentOffset)
+            await MainActor.run {
+                state = .loaded(existing + newPage)
+                currentOffset += newPage.count
+                if newPage.count < pageSize {
+                    hasMore = false
+                }
+            }
+        } catch {
+            // Mantenemos la lista actual
         }
     }
 

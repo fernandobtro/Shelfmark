@@ -9,6 +9,7 @@ import Foundation
 
 protocol ReadingListRepositoryProtocol {
     func fetchAllLists() async throws -> [ReadingList]
+    func fetchListsPaginated(limit: Int, offset: Int) async throws -> [ReadingList]
     func createList(name: String) async throws -> ReadingList
     func renameList(id: UUID, name: String) async throws
     func deleteList(id: UUID) async throws
