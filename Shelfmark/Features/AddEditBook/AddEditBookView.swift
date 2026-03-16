@@ -7,15 +7,20 @@
 
 import SwiftUI
 import Observation
+import Kingfisher
 
 struct AddEditBookView: View {
     @Bindable var viewModel: AddEditBookViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var saveTrigger = 0
+    @State private var isShowingCoverScanner = false
+    @State private var coverProcessingError: String?
 
     var body: some View {
         NavigationStack {
             Form {
+                coverSection
+
                 Section("Información del libro") {
                     TextField("Título", text: $viewModel.title)
                     TextField("Subtítulo", text: $viewModel.subtitle)
@@ -41,7 +46,11 @@ struct AddEditBookView: View {
                     )
                     .opacity(viewModel.publicationDate == nil ? 0.6 : 1)
 
-                    TextField("Idioma (código, ej. es, en)", text: $viewModel.language)
+                    Picker("Idioma", selection: $viewModel.language) {
+                        ForEach(languageOptions) { option in
+                            Text(option.displayName).tag(option.code)
+                        }
+                    }
                 }
 
                 Section("Descripción") {
@@ -89,7 +98,105 @@ struct AddEditBookView: View {
                     }
                 }
             }
+            .sheet(isPresented: $isShowingCoverScanner) {
+                CoverDocumentScanner { image in
+                    Task {
+                        do {
+                            let url = try ImageStorage.saveDownscaledCover(image)
+                            await MainActor.run {
+                                viewModel.updateCover(url: url)
+                                coverProcessingError = nil
+                            }
+                        } catch {
+                            await MainActor.run {
+                                coverProcessingError = "No se pudo guardar la portada. Inténtalo de nuevo."
+                            }
+                        }
+                    }
+                }
+            }
+            .alert("Error al procesar la portada", isPresented: Binding(
+                get: { coverProcessingError != nil },
+                set: { _ in coverProcessingError = nil }
+            )) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(coverProcessingError ?? "")
+            }
         }
+    }
+}
+
+// MARK: - Portada
+
+extension AddEditBookView {
+    private var coverSection: some View {
+        Section {
+            Button {
+                // En el siguiente paso conectaremos esto con la cámara / selector de fotos.
+                isShowingCoverScanner = true
+            } label: {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6]))
+                        .foregroundStyle(.secondary)
+                        .frame(height: 180)
+
+                    if let url = viewModel.coverURL {
+                        KFImage(url)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: 180)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.system(size: 28))
+                                .foregroundStyle(.secondary)
+                            Text("Añadir portada")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+// MARK: - Idiomas soportados
+
+private struct LanguageOption: Identifiable {
+    let id: String   // mismo que code
+    let code: String
+    let displayName: String
+
+    init(code: String, displayName: String) {
+        self.id = code
+        self.code = code
+        self.displayName = displayName
+    }
+}
+
+extension AddEditBookView {
+    /// Lista de idiomas que mostramos en el picker.
+    private var languageOptions: [LanguageOption] {
+        let codes = ["es", "en", "fr", "de", "it"]
+        var options = codes.compactMap { code -> LanguageOption? in
+            let name = Locale.current.localizedString(forLanguageCode: code) ?? code
+            return LanguageOption(code: code, displayName: name.capitalized)
+        }
+
+        // Si el libro tiene un código no incluido, lo añadimos como opción extra.
+        if !viewModel.language.isEmpty,
+           !options.contains(where: { $0.code == viewModel.language }) {
+            let name = Locale.current.localizedString(forLanguageCode: viewModel.language)
+                ?? viewModel.language
+            options.append(LanguageOption(code: viewModel.language, displayName: name.capitalized))
+        }
+
+        return options
     }
 }
 

@@ -23,10 +23,12 @@ struct AddBooksToListSheet: View {
     @State private var searchText: String = ""
     @State private var addTrigger = 0
     @State private var bookIdToAdd: UUID?
+    /// Libros añadidos durante esta sesión del sheet (feedback visual).
+    @State private var addedThisSession: Set<UUID> = []
 
     private var booksToShow: [Book] {
         guard case .loaded(let books) = sheetState else { return [] }
-        let available = books.filter { !bookIdsAlreadyInList.contains($0.id) }
+        let available = books
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return available }
         let normalized = query.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current)
@@ -55,12 +57,26 @@ struct AddBooksToListSheet: View {
                     } else {
                         List {
                             ForEach(booksToShow, id: \.id) { book in
+                                let isAlreadyInList = bookIdsAlreadyInList.contains(book.id)
+                                let isSelected = isAlreadyInList || addedThisSession.contains(book.id)
+
                                 Button {
+                                    guard !isSelected else { return }
                                     bookIdToAdd = book.id
                                     addTrigger += 1
                                 } label: {
-                                    LibraryCellView(book: book)
+                                    HStack {
+                                        LibraryCellView(book: book)
+                                            .opacity(isSelected ? 0.6 : 1.0)
+
+                                        if isSelected {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .font(.title3)
+                                                .foregroundStyle(.primaryGreen)
+                                        }
+                                    }
                                 }
+                                .disabled(isSelected)
                                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             }
                         }
@@ -69,7 +85,10 @@ struct AddBooksToListSheet: View {
                         .task(id: addTrigger) {
                             if addTrigger > 0, let id = bookIdToAdd {
                                 await onAddBook(id)
-                                await MainActor.run { bookIdToAdd = nil }
+                                await MainActor.run {
+                                    addedThisSession.insert(id)
+                                    bookIdToAdd = nil
+                                }
                             }
                         }
                     }
@@ -89,9 +108,10 @@ struct AddBooksToListSheet: View {
             .dismissKeyboardOnTapOutside()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo") {
+                    Button(readyButtonTitle) {
                         onDismiss()
                     }
+                    .animation(.default, value: addedThisSession.count)
                 }
             }
             .task {
@@ -112,6 +132,11 @@ struct AddBooksToListSheet: View {
                 sheetState = .error(error.localizedDescription)
             }
         }
+    }
+
+    private var readyButtonTitle: String {
+        guard !addedThisSession.isEmpty else { return "Listo" }
+        return "Listo (\(addedThisSession.count))"
     }
 }
 

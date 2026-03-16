@@ -70,18 +70,22 @@ struct RootView: View {
             case .profile: profileViewModel.unload()
             }
         }
-        .confirmationDialog("Añadir libro", isPresented: $showAddOptionsDialog, titleVisibility: .visible) {
-            Button("Escanear código de barras") {
-                scannerViewModel = container.makeBookScannerViewModel()
-                isPresentingScanner = true
-            }
-            Button("Añadir manualmente") {
-                bookToAddFromScanner = nil
-                isPresentingAddBook = true
-            }
-            Button("Cancelar", role: .cancel) {}
-        } message: {
-            Text("Elige cómo quieres añadir el libro.")
+        .sheet(isPresented: $showAddOptionsDialog) {
+            AddBookOptionsSheetView(
+                onScanISBN: {
+                    scannerViewModel = container.makeBookScannerViewModel()
+                    isPresentingScanner = true
+                },
+                onAddManually: {
+                    bookToAddFromScanner = nil
+                    isPresentingAddBook = true
+                },
+                onDismiss: {
+                    showAddOptionsDialog = false
+                }
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $isPresentingScanner, onDismiss: {
             scannerViewModel = nil

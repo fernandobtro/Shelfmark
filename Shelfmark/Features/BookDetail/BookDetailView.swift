@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Observation
+import Kingfisher
 
 struct BookDetailView: View {
     @Bindable var viewModel: BookDetailViewModel
@@ -21,9 +22,7 @@ struct BookDetailView: View {
     var body: some View {
         Group {
             switch viewModel.state {
-            case .idle:
-                Color.clear
-            case .loading:
+            case .idle, .loading:
                 ProgressView("Cargando…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded(let book):
@@ -32,7 +31,8 @@ struct BookDetailView: View {
                 errorView(message: message)
             }
         }
-        .navigationTitle("Detalle del libro")
+        .background(Color.theme.mainBackground)
+        .navigationTitle("Ficha del libro")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -65,51 +65,118 @@ struct BookDetailView: View {
     }
 
     private func bookContent(book: Book) -> some View {
-        Form {
-            Section("Información del libro") {
-                LabeledContent("Título", value: book.title)
-                if let subtitle = book.subtitle, !subtitle.isEmpty {
-                    LabeledContent("Subtítulo", value: subtitle)
+        ScrollView {
+            VStack(spacing: 24) {
+                // Portada centrada
+                if let url = book.thumbnailURL {
+                    KFImage(url)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 220)
+                        .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 10)
+                        .padding(.top, 24)
                 }
-            }
 
-            Section("Autores") {
-                if book.authors.isEmpty {
-                    Text("Sin autores")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(book.authors, id: \.id) { author in
-                        Text(author.name)
+                // Título y autor
+                VStack(spacing: 6) {
+                    Text(book.title)
+                        .font(.title2.weight(.semibold))
+                        .multilineTextAlignment(.center)
+
+                    if let subtitle = book.subtitle, !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    let authorsText = book.authors.map(\.name).joined(separator: ", ")
+                    if !authorsText.isEmpty {
+                        Text(authorsText)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                     }
                 }
-            }
+                .padding(.horizontal)
 
-            Section("Detalles") {
-                LabeledContent("ISBN", value: book.isbn)
-                if let publisher = book.publisher {
-                    LabeledContent("Editorial", value: publisher.name)
-                }
-                if let pages = book.numberOfPages {
-                    LabeledContent("Páginas", value: "\(pages)")
-                }
-                if let date = book.publicationDate {
-                    LabeledContent("Fecha de publicación", value: date.formatted(date: .abbreviated, time: .omitted))
-                }
-                LabeledContent("Idioma", value: book.language)
-            }
+                // Chips de acciones principales
+                HStack(spacing: 12) {
+                    Label(book.isFavorite ? "Favorito" : "Marcar favorito",
+                          systemImage: book.isFavorite ? "heart.fill" : "heart")
+                        .font(.subheadline.weight(.medium))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule().fill(Color.theme.secondaryBackground)
+                        )
 
-            if let description = book.bookDescription, !description.isEmpty {
-                Section("Descripción") {
-                    Text(description)
+                    Label(readingStatusDisplayName(book.readingStatus), systemImage: "book")
+                        .font(.subheadline.weight(.medium))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule().fill(Color.theme.secondaryBackground)
+                        )
+
+                    Button {
+                        bookToEdit = book
+                    } label: {
+                        Label("Editar", systemImage: "pencil")
+                            .font(.subheadline.weight(.medium))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule().fill(Color.theme.secondaryBackground)
+                            )
+                    }
+                    .buttonStyle(.plain)
                 }
-            }
+                .foregroundStyle(Color.theme.textPrimary)
+                .padding(.horizontal)
 
-            Section("Mi biblioteca") {
-                LabeledContent("Favorito", value: book.isFavorite ? "Sí" : "No")
-                LabeledContent("Estado", value: readingStatusDisplayName(book.readingStatus))
-            }
+                // Detalles
+                VStack(alignment: .leading, spacing: 16) {
+                    if let description = book.bookDescription, !description.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Descripción")
+                                .font(.headline)
+                            Text(description)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
 
-            Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Detalles")
+                            .font(.headline)
+                        VStack(alignment: .leading, spacing: 4) {
+                            detailRow(title: "ISBN", value: book.isbn)
+                            if let publisher = book.publisher {
+                                detailRow(title: "Editorial", value: publisher.name)
+                            }
+                            if let pages = book.numberOfPages {
+                                detailRow(title: "Páginas", value: "\(pages)")
+                            }
+                            if let date = book.publicationDate {
+                                detailRow(title: "Fecha de publicación", value: date.formatted(date: .abbreviated, time: .omitted))
+                            }
+                            detailRow(title: "Idioma", value: book.language)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Mi biblioteca")
+                            .font(.headline)
+                        VStack(alignment: .leading, spacing: 4) {
+                            detailRow(title: "Favorito", value: book.isFavorite ? "Sí" : "No")
+                            detailRow(title: "Estado", value: readingStatusDisplayName(book.readingStatus))
+                        }
+                    }
+                }
+                .padding(.horizontal)
+
+                // Botón eliminar
                 Button(role: .destructive) {
                     isShowingDeleteAlert = true
                 } label: {
@@ -118,9 +185,14 @@ struct BookDetailView: View {
                             .progressViewStyle(.circular)
                     } else {
                         Text("Eliminar libro")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
+                .buttonStyle(.bordered)
+                .tint(.red)
+                .padding(.horizontal)
+                .padding(.bottom, 24)
                 .disabled(isDeleting)
             }
         }
@@ -142,6 +214,17 @@ struct BookDetailView: View {
         case .read: return "Leído"
         case .none: return "Ninguno"
         }
+    }
+
+    private func detailRow(title: String, value: String) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(value)
+                .foregroundStyle(Color.theme.textPrimary)
+        }
+        .font(.footnote)
     }
 
     private func errorView(message: String) -> some View {

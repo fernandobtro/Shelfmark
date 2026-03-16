@@ -39,14 +39,17 @@ enum GroupOption: Hashable, CaseIterable {
 }
 
 enum FilterOption: Hashable {
-    case all
+    case none
+    case read
     case reading
     case favorites
     
     var displayName: String {
         switch self {
-        case .all:
-            "Todos"
+        case .none:
+            "" // No se muestra como botón
+        case .read:
+            "Leídos"
         case .reading:
             "Leyendo"
         case .favorites:

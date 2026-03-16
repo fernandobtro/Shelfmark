@@ -14,7 +14,7 @@ struct LibraryHeaderView: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            filterButton(.all)
+            filterButton(.read)
             filterButton(.reading)
             filterButton(.favorites)
         }
@@ -27,7 +27,12 @@ private extension LibraryHeaderView {
         let isSelected = viewModel.filterOption == option
 
         return Button(option.displayName) {
-            viewModel.selectFilter(option)
+            // Si se vuelve a tocar el mismo filtro, lo desactivamos (equivale a "Todos").
+            if isSelected {
+                viewModel.selectFilter(.none)
+            } else {
+                viewModel.selectFilter(option)
+            }
         }
         .font(.subheadline.weight(.semibold))
         .foregroundColor(isSelected ? Color.white : Color.secondary)

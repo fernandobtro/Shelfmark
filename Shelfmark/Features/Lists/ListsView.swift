@@ -28,25 +28,53 @@ struct ListsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
-                        ForEach(lists, id: \.id) { list in
-                            NavigationLink(value: list.id) {
-                                Text(list.name)
-                            }
+                        // Sección fija
+                        Section("Fijas") {
+                            FixedListRowView(
+                                systemImage: "bookmark",
+                                title: "Por leer",
+                                subtitle: "Libros marcados como pendientes"
+                            )
+                            FixedListRowView(
+                                systemImage: "book",
+                                title: "Leídos",
+                                subtitle: "Todos los libros terminados"
+                            )
+                            FixedListRowView(
+                                systemImage: "heart.fill",
+                                title: "Favoritos",
+                                subtitle: "Libros marcados como favoritos"
+                            )
                         }
-                        if viewModel.hasMore {
-                            Section {
-                                if viewModel.isLoadingNextPage {
-                                    ProgressView()
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                } else {
-                                    Color.clear
-                                        .frame(height: 1)
-                                        .task { await viewModel.loadNextPage() }
+
+                        // Sección de listas del usuario
+                        Section("Mis listas") {
+                            ForEach(lists, id: \.id) { list in
+                                NavigationLink(value: list.id) {
+                                    ReadingListCellView(
+                                        list: list,
+                                        booksCount: viewModel.booksCountByList[list.id] ?? 0,
+                                        previewCoverURLs: viewModel.previewCoversByList[list.id] ?? []
+                                    )
+                                }
+                            }
+
+                            if viewModel.hasMore {
+                                Section {
+                                    if viewModel.isLoadingNextPage {
+                                        ProgressView()
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                    } else {
+                                        Color.clear
+                                            .frame(height: 1)
+                                            .task { await viewModel.loadNextPage() }
+                                    }
                                 }
                             }
                         }
                     }
+                    .listStyle(.insetGrouped)
                 }
 
             case .error(let message):

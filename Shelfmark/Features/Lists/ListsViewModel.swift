@@ -27,6 +27,13 @@ final class ListsViewModel {
     var hasMore = true
     var isLoadingNextPage = false
 
+    /// Número de libros por lista. Por ahora se inicializa en 0; se podrá poblar más adelante
+    /// cuando tengamos un use case que devuelva este dato.
+    var booksCountByList: [UUID: Int] = [:]
+    /// URLs de portada de ejemplo por lista (hasta 4). Preparado para cuando
+    /// tengamos un use case que devuelva libros asociados a cada lista.
+    var previewCoversByList: [UUID: [URL]] = [:]
+
     private let fetchReadingListsUseCase: FetchReadingListUseCaseProtocol
     private let createReadingListUseCase: CreateReadingListUseCaseProtocol
 

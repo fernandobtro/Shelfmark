@@ -21,7 +21,8 @@ final class LibraryViewModel {
     var sortOption: SortOption = .title
     var groupOption: GroupOption = .none
     var isShowingSortMenu: Bool = false
-    var filterOption: FilterOption = .all
+    /// Filtro actual. `.none` significa "mostrar todos los libros".
+    var filterOption: FilterOption = .none
     var searchText: String = ""
     
     let pageSize = 20
@@ -44,10 +45,12 @@ final class LibraryViewModel {
 
         let filteredBooks = booksAfterSearch.filter { book in
             switch filterOption {
-            case .all:
+            case .none:
                 return true
+            case .read:
+                return book.readingStatus == .read
             case .reading:
-                return book.readingStatus == ReadingStatus.reading
+                return book.readingStatus == .reading
             case .favorites:
                 return book.isFavorite
             }

@@ -38,6 +38,9 @@ final class AddEditBookViewModel {
     var readingStatus: ReadingStatus
     var isSaving = false
     var errorMessage: String?
+    
+    /// Portada actual (puede venir de la API o de una foto local).
+    var coverURL: URL?
 
     private let saveBookUseCase: SaveBookUseCaseProtocol
     private let mode: AddEditBookMode
@@ -62,6 +65,7 @@ final class AddEditBookViewModel {
             descriptionText = ""
             isFavorite = false
             readingStatus = .none
+            coverURL = nil
 
         case .addWithInitialData(let book):
             originalBook = book
@@ -76,6 +80,7 @@ final class AddEditBookViewModel {
             descriptionText = book.bookDescription ?? ""
             isFavorite = false
             readingStatus = .none
+            coverURL = book.thumbnailURL
 
         case .edit(let existing):
             originalBook = existing
@@ -90,6 +95,7 @@ final class AddEditBookViewModel {
             descriptionText = existing.bookDescription ?? ""
             isFavorite = existing.isFavorite
             readingStatus = existing.readingStatus
+            coverURL = existing.thumbnailURL
         }
     }
 
@@ -129,6 +135,11 @@ final class AddEditBookViewModel {
             }
         }
     }
+    
+    func updateCover(url: URL) {
+        coverURL = url
+    }
+
 
     private func buildBook() -> Book {
         let bookId: UUID
@@ -157,15 +168,6 @@ final class AddEditBookViewModel {
         let descriptionValue = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
         let finalDescription = descriptionValue.isEmpty ? nil : descriptionValue
 
-        // Conserva la portada remota / existente cuando venimos del escáner o de editar.
-        let finalThumbnailURL: URL?
-        switch mode {
-        case .add:
-            finalThumbnailURL = nil
-        case .addWithInitialData, .edit:
-            finalThumbnailURL = originalBook?.thumbnailURL
-        }
-
         return Book(
             id: bookId,
             isbn: finalIsbn,
@@ -174,7 +176,7 @@ final class AddEditBookViewModel {
             numberOfPages: numberOfPages,
             publisher: publisher,
             publicationDate: publicationDate,
-            thumbnailURL: finalThumbnailURL,
+            thumbnailURL: coverURL,
             bookDescription: finalDescription,
             subtitle: finalSubtitle,
             language: language.isEmpty ? "es" : language,
