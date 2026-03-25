@@ -26,3 +26,6 @@ fastlane/test_output/
 Pods/
 
 Secrets.xcconfig
+
+# Local docs (not versioned)
+docs/
