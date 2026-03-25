@@ -36,6 +36,8 @@ final class AddEditBookViewModel {
     // Estado de la pantalla
     var isFavorite: Bool
     var readingStatus: ReadingStatus
+    /// Página en la que vas (opcional); vacío = sin registrar.
+    var currentPageText: String
     var isSaving = false
     var errorMessage: String?
     
@@ -65,6 +67,7 @@ final class AddEditBookViewModel {
             descriptionText = ""
             isFavorite = false
             readingStatus = .none
+            currentPageText = ""
             coverURL = nil
 
         case .addWithInitialData(let book):
@@ -80,6 +83,7 @@ final class AddEditBookViewModel {
             descriptionText = book.bookDescription ?? ""
             isFavorite = false
             readingStatus = .none
+            currentPageText = book.currentPage.map(String.init) ?? ""
             coverURL = book.thumbnailURL
 
         case .edit(let existing):
@@ -95,6 +99,7 @@ final class AddEditBookViewModel {
             descriptionText = existing.bookDescription ?? ""
             isFavorite = existing.isFavorite
             readingStatus = existing.readingStatus
+            currentPageText = existing.currentPage.map(String.init) ?? ""
             coverURL = existing.thumbnailURL
         }
     }
@@ -116,6 +121,15 @@ final class AddEditBookViewModel {
         guard !trimmedTitle.isEmpty else {
             await MainActor.run {
                 errorMessage = "El título es obligatorio."
+                isSaving = false
+            }
+            return
+        }
+
+        let pagesParsed = Int(pagesText.trimmingCharacters(in: .whitespacesAndNewlines))
+        if let msg = Book.validationErrorMessage(currentPageText: currentPageText, numberOfPages: pagesParsed) {
+            await MainActor.run {
+                errorMessage = msg
                 isSaving = false
             }
             return
@@ -168,6 +182,9 @@ final class AddEditBookViewModel {
         let descriptionValue = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
         let finalDescription = descriptionValue.isEmpty ? nil : descriptionValue
 
+        let pageTrimmed = currentPageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let currentPageParsed: Int? = pageTrimmed.isEmpty ? nil : Int(pageTrimmed)
+
         return Book(
             id: bookId,
             isbn: finalIsbn,
@@ -181,7 +198,8 @@ final class AddEditBookViewModel {
             subtitle: finalSubtitle,
             language: language.isEmpty ? "es" : language,
             isFavorite: isFavorite,
-            readingStatus: readingStatus
+            readingStatus: readingStatus,
+            currentPage: currentPageParsed
         )
     }
 

@@ -16,6 +16,7 @@ struct AddEditQuoteView: View {
     @State private var showDeleteConfirmation = false
     @State private var saveTrigger = 0
     @State private var deleteTrigger = 0
+    @State private var showBookSelector = false
 
     var body: some View {
         NavigationStack {
@@ -31,10 +32,33 @@ struct AddEditQuoteView: View {
                         }
 
                         Section("Libro") {
-                            Picker("Libro", selection: $viewModel.selectedBookId) {
-                                Text("Selecciona un libro").tag(nil as UUID?)
-                                ForEach(viewModel.filteredBooks, id: \.id) { book in
-                                    Text(book.title).tag(book.id as UUID?)
+                            Button {
+                                showBookSelector = true
+                            } label: {
+                                HStack {
+                                    if let book = viewModel.selectedBook {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(book.title)
+                                                .font(.body)
+                                            let authors = book.authors.map(\.name).joined(separator: ", ")
+                                            if !authors.isEmpty {
+                                                Text(authors)
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                    } else {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Seleccionar libro")
+                                                .foregroundStyle(.primary)
+                                            Text("Obligatorio para guardar")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundStyle(.secondary)
                                 }
                             }
                             .disabled(viewModel.books.isEmpty)
@@ -66,7 +90,6 @@ struct AddEditQuoteView: View {
             .dismissKeyboardOnTapOutside()
             .navigationTitle(viewModel.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $viewModel.searchText, prompt: "Buscar libro")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") {
@@ -77,7 +100,12 @@ struct AddEditQuoteView: View {
                     Button("Guardar") {
                         saveTrigger += 1
                     }
-                    .disabled(viewModel.isSaving || viewModel.isLoading)
+                    .disabled(
+                        viewModel.isSaving
+                        || viewModel.isLoading
+                        || viewModel.selectedBookId == nil
+                        || viewModel.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    )
                 }
             }
             .task(id: saveTrigger) {
@@ -104,6 +132,14 @@ struct AddEditQuoteView: View {
                 Button("Cancelar", role: .cancel) {}
             } message: {
                 Text("¿Seguro que quieres eliminar esta cita?")
+            }
+        }
+        .sheet(isPresented: $showBookSelector) {
+            SelectBookForQuoteSheetView(
+                books: viewModel.books,
+                preselectedBookId: viewModel.selectedBookId
+            ) { book in
+                viewModel.selectedBook = book
             }
         }
         .task {

@@ -8,6 +8,7 @@
 import XCTest
 @testable import Shelfmark
 
+@MainActor
 final class FetchReadingListUseCaseImplTests: XCTestCase {
 
     func test_execute_whenRepositoryReturnsLists_returnsSameListsAndCallsRepoOnce() async throws {
@@ -24,9 +25,10 @@ final class FetchReadingListUseCaseImplTests: XCTestCase {
         let useCase = FetchReadingListUseCaseImpl(repository: mock)
 
         let result = try await useCase.execute()
+        let firstName = result.first?.name
 
         XCTAssertEqual(result.count, 1)
-        XCTAssertEqual(result.first?.name, "Fantasy")
+        XCTAssertEqual(firstName, "Fantasy")
         XCTAssertEqual(mock.fetchAllCallCount, 1)
     }
 

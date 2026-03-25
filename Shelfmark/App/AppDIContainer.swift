@@ -62,6 +62,16 @@ final class AppDIContainer {
     lazy var createReadingListUseCase: CreateReadingListUseCaseProtocol = {
         CreateReadingListUseCaseImpl(repository: readingListRepository)
     }()
+
+    /// Use Case: Rename Reading List
+    lazy var renameReadingListUseCase: RenameReadingListUseCaseProtocol = {
+        RenameReadingListUseCaseImpl(repository: readingListRepository)
+    }()
+
+    /// Use Case: Delete Reading List
+    lazy var deleteReadingListUseCase: DeleteReadingListUseCaseProtocol = {
+        DeleteReadingListUseCaseImpl(repository: readingListRepository)
+    }()
     
     /// Use Case: Fetch Book in List
     lazy var fetchBookInListUseCase: FetchBooksInListUseCaseProtocol = {
@@ -103,10 +113,12 @@ final class AppDIContainer {
         DeleteQuoteUseCaseImpl(repository: quoteRepository)
     }()
 
-    /// Use Case: reconocer texto en imagen (OCR para citas).
-    lazy var recognizeTextInImageUseCase: RecognizeTextInImageUseCaseProtocol = {
-        RecognizeTextInImageUseCaseImpl()
+    /// Use Case: métricas de lectura desde libros.
+    lazy var calculateReadingStatsUseCase: CalculateReadingStatsUseCaseProtocol = {
+        CalculateReadingStatsUseCaseImpl.shared
     }()
+
+    /// Use Case: reconocer texto en imagen (OCR para citas).
     
     /// Para networking (lookup por ISBN)
     private lazy var remoteBookDataSource: RemoteBookDataSource = {
@@ -121,16 +133,39 @@ final class AppDIContainer {
         LookUpByISBNUseCaseImpl(repository: remoteBookLookUpRepository)
     }()
     
-    init() {
+    init(useInMemoryStore: Bool = false) {
         do {
-            modelContainer = try ModelContainer(
-                for: BookEntity.self,
-                     AuthorEntity.self,
-                     PublisherEntity.self,
-                     ReadingListEntity.self,
-                     ReadingListItemEntity.self,
-                     QuoteEntity.self
-            )
+            let env = ProcessInfo.processInfo.environment
+            let dyldHasXCTest = env["DYLD_INSERT_LIBRARIES"]?
+                .localizedCaseInsensitiveContains("xctest") == true
+            let isRunningTests =
+                env["XCTestConfigurationFilePath"] != nil ||
+                env["XCTestBundlePath"] != nil ||
+                env["XCInjectBundle"] != nil ||
+                env["XCInjectBundleInto"] != nil ||
+                dyldHasXCTest ||
+                NSClassFromString("XCTestCase") != nil
+            if useInMemoryStore || isRunningTests {
+                let config = ModelConfiguration(isStoredInMemoryOnly: true)
+                modelContainer = try ModelContainer(
+                    for: BookEntity.self,
+                         AuthorEntity.self,
+                         PublisherEntity.self,
+                         ReadingListEntity.self,
+                         ReadingListItemEntity.self,
+                         QuoteEntity.self,
+                    configurations: config
+                )
+            } else {
+                modelContainer = try ModelContainer(
+                    for: BookEntity.self,
+                         AuthorEntity.self,
+                         PublisherEntity.self,
+                         ReadingListEntity.self,
+                         ReadingListItemEntity.self,
+                         QuoteEntity.self
+                )
+            }
         } catch {
             fatalError("No se pudo inicializar la base de datos: \(error)")
         }
@@ -172,7 +207,9 @@ extension AppDIContainer {
         BookDetailViewModel(
             bookId: bookId,
             fetchBookDetailUseCase: fetchBookDetailUseCase,
-            deleteBookUseCase: deleteBookUseCase
+            deleteBookUseCase: deleteBookUseCase,
+            fetchQuotesUseCase: fetchQuotesUseCase,
+            saveBookUseCase: saveBookUseCase
         )
     }
     
@@ -183,7 +220,13 @@ extension AppDIContainer {
     
     @MainActor
     func makeListsViewModel() -> ListsViewModel {
-        ListsViewModel(fetchReadingListsUseCase: fetchReadingListsUseCase, createReadingListUseCase: createReadingListUseCase)
+        ListsViewModel(
+            fetchReadingListsUseCase: fetchReadingListsUseCase,
+            createReadingListUseCase: createReadingListUseCase,
+            fetchBooksInListUseCase: fetchBookInListUseCase,
+            renameReadingListUseCase: renameReadingListUseCase,
+            deleteReadingListUseCase: deleteReadingListUseCase
+        )
     }
     
     @MainActor
@@ -218,11 +261,6 @@ extension AppDIContainer {
     }
 
     @MainActor
-    func makeQuoteScannerViewModel() -> QuoteScannerViewModel {
-        QuoteScannerViewModel(recognizeTextUseCase: recognizeTextInImageUseCase)
-    }
-
-    @MainActor
     func makeQuoteDetailViewModel(quoteId: UUID) -> QuoteDetailViewModel {
         QuoteDetailViewModel(
             quoteId: quoteId,
@@ -239,6 +277,14 @@ extension AppDIContainer {
             fetchLibraryUseCase: fetchLibraryUseCase,
             fetchQuotesUseCase: fetchQuotesUseCase,
             fetchReadingListsUseCase: fetchReadingListsUseCase
+        )
+    }
+
+    @MainActor
+    func makeLibraryStatsViewModel() -> LibraryStatsViewModel {
+        LibraryStatsViewModel(
+            fetchLibraryUseCase: fetchLibraryUseCase,
+            calculateReadingStatsUseCase: calculateReadingStatsUseCase
         )
     }
 }

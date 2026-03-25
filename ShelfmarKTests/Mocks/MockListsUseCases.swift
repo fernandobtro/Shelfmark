@@ -16,6 +16,12 @@ final class MockFetchReadingListUseCase: FetchReadingListUseCaseProtocol {
         if let errorToThrow { throw errorToThrow }
         return listsToReturn
     }
+
+    func executePaginated(limit: Int, offset: Int) async throws -> [ReadingList] {
+        executeCallCount += 1
+        if let errorToThrow { throw errorToThrow }
+        return Array(listsToReturn.dropFirst(offset).prefix(limit))
+    }
 }
 
 final class MockCreateReadingListUseCase: CreateReadingListUseCaseProtocol {
@@ -84,6 +90,32 @@ final class MockRemoveBookFromReadingListUseCase: RemoveBookFromReadingListUseCa
         executeCallCount += 1
         lastBookIdReceived = bookId
         lastListIdReceived = listId
+        if let errorToThrow { throw errorToThrow }
+    }
+}
+
+final class MockRenameReadingListUseCase: RenameReadingListUseCaseProtocol {
+    var errorToThrow: Error?
+    var executeCallCount = 0
+    var lastIdReceived: UUID?
+    var lastNameReceived: String?
+
+    func execute(id: UUID, newName: String) async throws {
+        executeCallCount += 1
+        lastIdReceived = id
+        lastNameReceived = newName
+        if let errorToThrow { throw errorToThrow }
+    }
+}
+
+final class MockDeleteReadingListUseCase: DeleteReadingListUseCaseProtocol {
+    var errorToThrow: Error?
+    var executeCallCount = 0
+    var lastIdReceived: UUID?
+
+    func execute(id: UUID) async throws {
+        executeCallCount += 1
+        lastIdReceived = id
         if let errorToThrow { throw errorToThrow }
     }
 }

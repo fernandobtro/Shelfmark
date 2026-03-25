@@ -56,6 +56,7 @@ struct CustomTabBar: View {
             }
         }
         .offset(y: -28)
+        .accessibilityIdentifier("tabbar.plus")
     }
     
     private func tabButton(for tab: TabBar) -> some View {
@@ -71,5 +72,6 @@ struct CustomTabBar: View {
             .foregroundStyle(selectedTab == tab ? .primaryGreen: .secondary)
             .frame(maxWidth: .infinity)
         }
+        .accessibilityIdentifier("tabbar.\(tab.title.lowercased())")
     }
 }

@@ -25,7 +25,8 @@ enum BookPersistenceMapper {
             subtitle: entity.subtitle,
             language: entity.language,
             isFavorite: entity.isFavorite,
-            readingStatus: ReadingStatus(rawValue: entity.readingStatusRaw) ?? .none
+            readingStatus: ReadingStatus(rawValue: entity.readingStatusRaw) ?? .none,
+            currentPage: entity.currentPage
         )
     }
 
@@ -46,7 +47,8 @@ enum BookPersistenceMapper {
             subtitle: book.subtitle,
             language: book.language,
             isFavorite: book.isFavorite,
-            readingStatusRaw: book.readingStatus.rawValue
+            readingStatusRaw: book.readingStatus.rawValue,
+            currentPage: book.currentPage
         )
     }
 }

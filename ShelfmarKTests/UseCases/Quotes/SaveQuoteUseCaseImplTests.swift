@@ -6,6 +6,7 @@
 import XCTest
 @testable import Shelfmark
 
+@MainActor
 final class SaveQuoteUseCaseImplTests: XCTestCase {
 
     func test_execute_callsRepositorySaveWithQuote() async throws {
@@ -15,10 +16,13 @@ final class SaveQuoteUseCaseImplTests: XCTestCase {
         let sut = SaveQuoteUseCaseImpl(repository: mock)
 
         try await sut.execute(quote: quote)
+        let savedQuoteId = mock.lastSaveQuote?.id
+        let savedQuoteText = mock.lastSaveQuote?.text
+        let expectedId = quote.id
 
         XCTAssertEqual(mock.saveCallCount, 1)
-        XCTAssertEqual(mock.lastSaveQuote?.id, quote.id)
-        XCTAssertEqual(mock.lastSaveQuote?.text, "Saved quote")
+        XCTAssertEqual(savedQuoteId, expectedId)
+        XCTAssertEqual(savedQuoteText, "Saved quote")
     }
 
     func test_execute_whenRepositoryThrows_propagatesError() async {

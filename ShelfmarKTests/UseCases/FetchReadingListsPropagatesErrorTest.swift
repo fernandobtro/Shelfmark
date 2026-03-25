@@ -8,6 +8,7 @@
 import XCTest
 @testable import Shelfmark
 
+@MainActor
 final class FetchReadingListsPropagatesErrorTest: XCTestCase {
     func testFetchReadingListsPropagatesError() async {
 
@@ -15,7 +16,7 @@ final class FetchReadingListsPropagatesErrorTest: XCTestCase {
         let mock = MockReadingListRepository()
         mock.errorToThrow = TestError.fake
 
-        let useCase = await FetchReadingListUseCaseImpl(repository: mock)
+        let useCase = FetchReadingListUseCaseImpl(repository: mock)
 
         // WHEN / THEN
         do {

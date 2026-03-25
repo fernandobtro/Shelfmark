@@ -53,6 +53,8 @@ final class LibraryViewModel {
                 return book.readingStatus == .reading
             case .favorites:
                 return book.isFavorite
+            case .pending:
+                return book.readingStatus == .pending
             }
         }
         
@@ -143,7 +145,9 @@ final class LibraryViewModel {
                 }
             }
         } catch {
-            print("Error cargando página: \(error.localizedDescription)")
+            await MainActor.run {
+                state = .error(error.localizedDescription)
+            }
         }
     }
     

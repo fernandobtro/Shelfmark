@@ -41,6 +41,14 @@ final class MockReadingListRepository: ReadingListRepositoryProtocol {
         return fetchAllListsResult
         
     }
+
+    func fetchListsPaginated(limit: Int, offset: Int) async throws -> [ReadingList] {
+        fetchAllCallCount += 1
+        if let error = errorToThrow {
+            throw error
+        }
+        return Array(fetchAllListsResult.dropFirst(offset).prefix(limit))
+    }
     
     func createList(name: String) async throws -> Shelfmark.ReadingList {
         createListCalls.append(name)

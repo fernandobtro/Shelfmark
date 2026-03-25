@@ -6,6 +6,7 @@
 import XCTest
 @testable import Shelfmark
 
+@MainActor
 final class FetchQuotesUseCaseImplTests: XCTestCase {
 
     func test_execute_returnsQuotesFromRepository() async throws {
@@ -18,7 +19,7 @@ final class FetchQuotesUseCaseImplTests: XCTestCase {
         let result = try await sut.execute()
 
         XCTAssertEqual(result.count, 2)
-        XCTAssertEqual(result.map(\.text), ["A", "B"])
+        XCTAssertEqual(result.map { $0.text }, ["A", "B"])
         XCTAssertEqual(mock.fetchAllCallCount, 1)
     }
 

@@ -11,6 +11,7 @@ import Observation
 
 struct LibraryView: View {
     @Bindable var viewModel: LibraryViewModel
+    var onStatsTap: () -> Void = {}
     @State private var retryTrigger = 0
     @State private var pendingDeleteBookId: UUID?
     @State private var deleteTrigger = 0
@@ -49,6 +50,14 @@ struct LibraryView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
+                    onStatsTap()
+                } label: {
+                    Image(systemName: "chart.bar.xaxis")
+                }
+                .accessibilityIdentifier("library.statsButton")
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
                     viewModel.isShowingSortMenu = true
                 } label: {
                     Image(systemName: "arrow.up.arrow.down")
@@ -82,18 +91,36 @@ struct LibraryView: View {
     @ViewBuilder
     private func libraryContent() -> some View {
         if viewModel.sectionedBooks.isEmpty {
+            let hasActiveSearch = !viewModel.searchText
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .isEmpty
+            let hasActiveFilter = viewModel.filterOption != .none
+            let isFiltering = hasActiveSearch || hasActiveFilter
+
             VStack(spacing: 16) {
-                Image(systemName: "book.closed")
+                Image(systemName: isFiltering ? "magnifyingglass" : "book.closed")
                     .font(.largeTitle)
                     .foregroundStyle(.secondary)
 
-                Text("Sin libros")
+                Text(isFiltering ? "Sin resultados" : "Sin libros")
                     .font(.headline)
 
-                Text("Añade tu primer libro desde el escáner o el formulario.")
+                Text(
+                    isFiltering
+                    ? "Prueba con otra búsqueda o limpia los filtros."
+                    : "Añade tu primer libro desde el escáner o el formulario."
+                )
                     .font(.subheadline)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
+
+                if isFiltering {
+                    Button("Limpiar búsqueda y filtros") {
+                        viewModel.searchText = ""
+                        viewModel.selectFilter(.none)
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {

@@ -29,7 +29,8 @@ final class BookScannerViewModelTests: XCTestCase {
             subtitle: nil,
             language: "es",
             isFavorite: false,
-            readingStatus: .none
+            readingStatus: .none,
+            currentPage: nil
         )
         mockUseCase.resultToReturn = book
 

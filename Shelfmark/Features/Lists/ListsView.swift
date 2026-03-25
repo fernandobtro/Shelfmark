@@ -10,6 +10,11 @@ import Observation
 
 struct ListsView: View {
     @Bindable var viewModel: ListsViewModel
+    @State private var selectedList: ReadingList?
+    @State private var renameText: String = ""
+    @State private var showRenameAlert = false
+    @State private var showDeleteAlert = false
+    @State private var retryTrigger = 0
 
     var body: some View {
         Group {
@@ -28,34 +33,45 @@ struct ListsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
-                        // Sección fija
-                        Section("Fijas") {
-                            FixedListRowView(
-                                systemImage: "bookmark",
-                                title: "Por leer",
-                                subtitle: "Libros marcados como pendientes"
-                            )
-                            FixedListRowView(
-                                systemImage: "book",
-                                title: "Leídos",
-                                subtitle: "Todos los libros terminados"
-                            )
-                            FixedListRowView(
-                                systemImage: "heart.fill",
-                                title: "Favoritos",
-                                subtitle: "Libros marcados como favoritos"
-                            )
-                        }
-
-                        // Sección de listas del usuario
                         Section("Mis listas") {
                             ForEach(lists, id: \.id) { list in
-                                NavigationLink(value: list.id) {
+                                NavigationLink(value: ListsRoute.list(list.id)) {
                                     ReadingListCellView(
                                         list: list,
                                         booksCount: viewModel.booksCountByList[list.id] ?? 0,
                                         previewCoverURLs: viewModel.previewCoversByList[list.id] ?? []
                                     )
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button("Renombrar") {
+                                        selectedList = list
+                                        renameText = list.name
+                                        showRenameAlert = true
+                                    }
+                                    .tint(.blue)
+
+                                    Button(role: .destructive) {
+                                        selectedList = list
+                                        showDeleteAlert = true
+                                    } label: {
+                                        Label("Eliminar", systemImage: "trash")
+                                    }
+                                }
+                                .contextMenu {
+                                    Button {
+                                        selectedList = list
+                                        renameText = list.name
+                                        showRenameAlert = true
+                                    } label: {
+                                        Label("Renombrar", systemImage: "pencil")
+                                    }
+
+                                    Button(role: .destructive) {
+                                        selectedList = list
+                                        showDeleteAlert = true
+                                    } label: {
+                                        Label("Eliminar", systemImage: "trash")
+                                    }
                                 }
                             }
 
@@ -78,18 +94,70 @@ struct ListsView: View {
                 }
 
             case .error(let message):
-                ContentUnavailableView(
-                    "Error",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(message)
-                )
+                VStack(spacing: 12) {
+                    ContentUnavailableView(
+                        "Error",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(message)
+                    )
+                    Button("Reintentar") {
+                        retryTrigger += 1
+                    }
+                    .buttonStyle(.bordered)
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .background(Color.theme.mainBackground)
         .navigationTitle("Listas")
-        .task {
+        .task(id: retryTrigger) {
             await viewModel.loadLists()
+        }
+        .alert("Renombrar lista", isPresented: $showRenameAlert) {
+            TextField("Nombre", text: $renameText)
+            Button("Cancelar", role: .cancel) {
+                selectedList = nil
+            }
+            Button("Guardar") {
+                guard let id = selectedList?.id else { return }
+                Task {
+                    await viewModel.renameList(id: id, newName: renameText)
+                    selectedList = nil
+                }
+            }
+        } message: {
+            Text("Elige un nombre para tu lista.")
+        }
+        .alert("Eliminar lista", isPresented: $showDeleteAlert) {
+            Button("Cancelar", role: .cancel) {
+                selectedList = nil
+            }
+            Button("Eliminar", role: .destructive) {
+                guard let id = selectedList?.id else { return }
+                Task {
+                    await viewModel.deleteList(id: id)
+                    selectedList = nil
+                }
+            }
+        } message: {
+            Text("Esta acción no se puede deshacer.")
+        }
+        .alert(
+            "No se pudo completar",
+            isPresented: Binding(
+                get: { (viewModel.inputErrorMessage ?? "").isEmpty == false },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.inputErrorMessage = nil
+                    }
+                }
+            )
+        ) {
+            Button("OK", role: .cancel) {
+                viewModel.inputErrorMessage = nil
+            }
+        } message: {
+            Text(viewModel.inputErrorMessage ?? "")
         }
     }
 }
@@ -102,7 +170,10 @@ struct ListsView: View {
             ReadingList(id: UUID(), name: "Libros para leer en 2026", createdAt: Date(), iconName: "", notes: ""),
             ReadingList(id: UUID(), name: "Marzo 2026", createdAt: Date(), iconName: "", notes: ""),
         ]),
-        createReadingListUseCase: PreviewCreateListUseCase()
+        createReadingListUseCase: PreviewCreateListUseCase(),
+        fetchBooksInListUseCase: PreviewFetchBooksInListForLists(),
+        renameReadingListUseCase: PreviewRenameListUseCase(),
+        deleteReadingListUseCase: PreviewDeleteListUseCase()
     )
     NavigationStack {
         ListsView(viewModel: viewModel)
@@ -113,7 +184,10 @@ struct ListsView: View {
 #Preview("Sin listas") {
     let viewModel = ListsViewModel(
         fetchReadingListsUseCase: PreviewFetchListsUseCase(lists: []),
-        createReadingListUseCase: PreviewCreateListUseCase()
+        createReadingListUseCase: PreviewCreateListUseCase(),
+        fetchBooksInListUseCase: PreviewFetchBooksInListForLists(),
+        renameReadingListUseCase: PreviewRenameListUseCase(),
+        deleteReadingListUseCase: PreviewDeleteListUseCase()
     )
     NavigationStack {
         ListsView(viewModel: viewModel)
@@ -124,7 +198,10 @@ struct ListsView: View {
 #Preview("Error") {
     let viewModel = ListsViewModel(
         fetchReadingListsUseCase: PreviewFetchListsUseCaseThrowing(),
-        createReadingListUseCase: PreviewCreateListUseCase()
+        createReadingListUseCase: PreviewCreateListUseCase(),
+        fetchBooksInListUseCase: PreviewFetchBooksInListForLists(),
+        renameReadingListUseCase: PreviewRenameListUseCase(),
+        deleteReadingListUseCase: PreviewDeleteListUseCase()
     )
     NavigationStack {
         ListsView(viewModel: viewModel)
@@ -153,4 +230,16 @@ private struct PreviewCreateListUseCase: CreateReadingListUseCaseProtocol {
     func execute(name: String) async throws -> ReadingList {
         ReadingList(id: UUID(), name: name, createdAt: Date(), iconName: "", notes: "")
     }
+}
+
+private struct PreviewFetchBooksInListForLists: FetchBooksInListUseCaseProtocol {
+    func execute(listId: UUID) async throws -> [Book] { [] }
+}
+
+private struct PreviewRenameListUseCase: RenameReadingListUseCaseProtocol {
+    func execute(id: UUID, newName: String) async throws {}
+}
+
+private struct PreviewDeleteListUseCase: DeleteReadingListUseCaseProtocol {
+    func execute(id: UUID) async throws {}
 }

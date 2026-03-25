@@ -13,7 +13,7 @@ final class AddBookToReadingListUseCaseImplTests: XCTestCase {
         let bookId = UUID()
         let listId = UUID()
 
-        let useCase = AddBookToReadingListImpl(repository: mock)
+        let useCase = await AddBookToReadingListImpl(repository: mock)
 
         try await useCase.execute(bookId: bookId, listId: listId)
 
@@ -26,7 +26,7 @@ final class AddBookToReadingListUseCaseImplTests: XCTestCase {
         let mock = MockReadingListRepository()
         mock.errorToThrow = TestError.fake
 
-        let useCase = AddBookToReadingListImpl(repository: mock)
+        let useCase = await AddBookToReadingListImpl(repository: mock)
 
         do {
             try await useCase.execute(bookId: UUID(), listId: UUID())

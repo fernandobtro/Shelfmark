@@ -11,29 +11,27 @@ import Observation
 enum AddEditQuoteMode {
     case add
     case addWithInitialText(String)
+    /// Crear una nueva cita preseleccionando un libro concreto (por ejemplo, desde BookDetailView).
+    case addForBook(Book)
     case edit(quoteId: UUID)
 }
 
 @Observable
 final class AddEditQuoteViewModel {
     var text: String = ""
-    var selectedBookId: UUID?
+    /// Libro actualmente seleccionado para la cita (obligatorio para guardar).
+    var selectedBook: Book?
     var pageReference: String = ""
 
+    /// Biblioteca completa disponible para elegir libro en el selector.
     var books: [Book] = []
-    var searchText: String = ""
     var isSaving = false
     var errorMessage: String?
     var isLoading = true
 
-    var filteredBooks: [Book] {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return books }
-        let normalized = query.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current)
-        return books.filter { book in
-            book.title.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(normalized)
-            || book.authors.contains { $0.name.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(normalized) }
-        }
+    /// Conveniencia para las vistas: id del libro seleccionado.
+    var selectedBookId: UUID? {
+        selectedBook?.id
     }
 
     var isEditMode: Bool {
@@ -70,30 +68,47 @@ final class AddEditQuoteViewModel {
 
         do {
             let library = try await fetchLibraryUseCase.execute()
-            await MainActor.run { books = library }
 
-            if case .edit(let quoteId) = mode {
+            switch mode {
+            case .edit(let quoteId):
                 guard let quote = try await fetchQuoteByIdUseCase.execute(quoteId: quoteId) else {
-                    await MainActor.run { errorMessage = "No se encontró la cita"; isLoading = false }
+                    await MainActor.run {
+                        books = library
+                        errorMessage = "No se encontró la cita"
+                        isLoading = false
+                    }
                     return
                 }
                 await MainActor.run {
+                    books = library
                     text = quote.text
-                    selectedBookId = quote.bookId
+                    selectedBook = library.first(where: { $0.id == quote.bookId })
                     pageReference = quote.pageReference ?? ""
                     isLoading = false
                 }
-            } else if case .addWithInitialText(let initialText) = mode {
-                await MainActor.run { text = initialText }
-                if let first = library.first {
-                    await MainActor.run { selectedBookId = first.id }
+
+            case .addWithInitialText(let initialText):
+                await MainActor.run {
+                    books = library
+                    text = initialText
+                    // No seleccionamos libro automáticamente: el usuario debe elegirlo.
+                    isLoading = false
                 }
-                await MainActor.run { isLoading = false }
-            } else {
-                if let first = library.first {
-                    await MainActor.run { selectedBookId = first.id }
+
+            case .addForBook(let book):
+                await MainActor.run {
+                    books = library
+                    // Intentamos usar la instancia de la biblioteca si existe, para mantener coherencia.
+                    selectedBook = library.first(where: { $0.id == book.id }) ?? book
+                    isLoading = false
                 }
-                await MainActor.run { isLoading = false }
+
+            case .add:
+                await MainActor.run {
+                    books = library
+                    // Sin selección inicial: el usuario debe elegir libro en el selector.
+                    isLoading = false
+                }
             }
         } catch {
             await MainActor.run { errorMessage = error.localizedDescription; isLoading = false }
@@ -116,7 +131,7 @@ final class AddEditQuoteViewModel {
         do {
             let quote: Quote
             switch mode {
-            case .add, .addWithInitialText:
+            case .add, .addWithInitialText, .addForBook:
                 quote = Quote(
                     id: UUID(),
                     text: trimmedText,

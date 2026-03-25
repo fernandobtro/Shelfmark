@@ -6,6 +6,7 @@
 import XCTest
 @testable import Shelfmark
 
+@MainActor
 final class FetchBooksInListUseCaseImplTests: XCTestCase {
 
     func test_execute_whenRepositoryReturnsBooks_returnsSameBooksAndCallsRepoWithListId() async throws {
@@ -19,7 +20,7 @@ final class FetchBooksInListUseCaseImplTests: XCTestCase {
         let result = try await useCase.execute(listId: listId)
 
         XCTAssertEqual(result.count, 2)
-        XCTAssertEqual(result.map(\.title), ["A", "B"])
+        XCTAssertEqual(result.map { $0.title }, ["A", "B"])
         XCTAssertEqual(mock.fetchBooksCalls, [listId])
     }
 

@@ -24,7 +24,8 @@ func makeSampleBook(id: UUID = UUID(), title: String = "Test Book") -> Book {
         subtitle: nil,
         language: "es",
         isFavorite: false,
-        readingStatus: .none
+        readingStatus: .none,
+        currentPage: nil
     )
 }
 

@@ -17,42 +17,91 @@ class SwiftDataBookRepository: BookRepositoryProtocol {
     }
     
     func save(_ book: Book) async throws {
-        let entity = BookPersistenceMapper.toEntity(book)
-
         let bookId = book.id
         let descriptor = FetchDescriptor<BookEntity>(predicate: #Predicate<BookEntity> { $0.id == bookId })
         let existing = try modelContext.fetch(descriptor)
+        let authors = try resolveAuthorEntities(from: book.authors)
+        let publisher = try resolvePublisherEntity(from: book.publisher)
 
         if let existingBook = existing.first {
-            
-            for authorEntity in entity.authors {
-                modelContext.insert(authorEntity)
-            }
-            if let publisherEntity = entity.publisher {
-                modelContext.insert(publisherEntity)
-            }
-            existingBook.isbn = entity.isbn
-            existingBook.title = entity.title
-            existingBook.numberOfPages = entity.numberOfPages
-            existingBook.publicationDate = entity.publicationDate
-            existingBook.thumbnailURL = entity.thumbnailURL
-            existingBook.bookDescription = entity.bookDescription
-            existingBook.subtitle = entity.subtitle
-            existingBook.language = entity.language
-            existingBook.authors = entity.authors
-            existingBook.publisher = entity.publisher
+            apply(book: book, to: existingBook, authors: authors, publisher: publisher)
         } else {
-            
-            for authorEntity in entity.authors {
-                modelContext.insert(authorEntity)
-            }
-            if let publisherEntity = entity.publisher {
-                modelContext.insert(publisherEntity)
-            }
-            modelContext.insert(entity)
+            let newBook = BookEntity(
+                id: book.id,
+                isbn: book.isbn,
+                authors: authors,
+                title: book.title,
+                numberOfPages: book.numberOfPages,
+                publisher: publisher,
+                publicationDate: book.publicationDate,
+                thumbnailURL: book.thumbnailURL,
+                bookDescription: book.bookDescription,
+                subtitle: book.subtitle,
+                language: book.language,
+                isFavorite: book.isFavorite,
+                readingStatusRaw: book.readingStatus.rawValue,
+                currentPage: book.currentPage
+            )
+            modelContext.insert(newBook)
         }
 
         try modelContext.save()
+    }
+
+    private func apply(book: Book, to entity: BookEntity, authors: [AuthorEntity], publisher: PublisherEntity?) {
+        entity.isbn = book.isbn
+        entity.title = book.title
+        entity.numberOfPages = book.numberOfPages
+        entity.publicationDate = book.publicationDate
+        entity.thumbnailURL = book.thumbnailURL
+        entity.bookDescription = book.bookDescription
+        entity.subtitle = book.subtitle
+        entity.language = book.language
+        entity.authors = authors
+        entity.publisher = publisher
+        entity.isFavorite = book.isFavorite
+        entity.readingStatusRaw = book.readingStatus.rawValue
+        entity.currentPage = book.currentPage
+    }
+
+    private func resolveAuthorEntities(from authors: [Author]) throws -> [AuthorEntity] {
+        var resolved: [AuthorEntity] = []
+        for author in authors {
+            let authorId = author.id
+            let descriptor = FetchDescriptor<AuthorEntity>(
+                predicate: #Predicate<AuthorEntity> { $0.id == authorId }
+            )
+            if let existing = try modelContext.fetch(descriptor).first {
+                // Si cambió el nombre, lo actualizamos para mantener consistencia.
+                if existing.name != author.name {
+                    existing.name = author.name
+                }
+                resolved.append(existing)
+            } else {
+                let entity = AuthorEntity(id: author.id, name: author.name)
+                modelContext.insert(entity)
+                resolved.append(entity)
+            }
+        }
+        return resolved
+    }
+
+    private func resolvePublisherEntity(from publisher: Publisher?) throws -> PublisherEntity? {
+        guard let publisher else { return nil }
+        let publisherId = publisher.id
+        let descriptor = FetchDescriptor<PublisherEntity>(
+            predicate: #Predicate<PublisherEntity> { $0.id == publisherId }
+        )
+        if let existing = try modelContext.fetch(descriptor).first {
+            if existing.name != publisher.name {
+                existing.name = publisher.name
+            }
+            return existing
+        } else {
+            let entity = PublisherEntity(id: publisher.id, name: publisher.name)
+            modelContext.insert(entity)
+            return entity
+        }
     }
     
     func fetchAll() async throws -> [Book] {

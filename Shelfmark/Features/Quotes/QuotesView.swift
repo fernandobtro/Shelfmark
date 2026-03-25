@@ -11,8 +11,13 @@ import Observation
 struct QuotesView: View {
     @Bindable var viewModel: QuotesViewModel
     let container: AppDIContainer
-    @State private var pendingDeleteQuoteId: UUID?
-    @State private var deleteTrigger = 0
+    @State private var retryTrigger = 0
+
+    private let gridColumns = [GridItem(.adaptive(minimum: 140), spacing: 16)]
+    private let emptySearchMessage = "Ningún resultado"
+    private let emptySearchSuggestion = "Prueba con otro término."
+    private let emptyQuotesMessage = "Sin citas"
+    private let emptyQuotesSuggestion = "Añade citas con el botón +."
 
     var body: some View {
         Group {
@@ -22,68 +27,20 @@ struct QuotesView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             case .loaded:
-                if viewModel.filteredSectionedQuotes.isEmpty {
-                    ContentUnavailableView(
-                        viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Sin citas" : "Ningún resultado",
-                        systemImage: viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "quote.closing" : "magnifyingglass",
-                        description: Text(viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Añade citas con el botón de la barra." : "Prueba con otro término.")
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List {
-                        ForEach(Array(viewModel.filteredSectionedQuotes.enumerated()), id: \.offset) { _, section in
-                            Section(section.key) {
-                                ForEach(section.quotes, id: \.id) { quote in
-                                    NavigationLink(value: quote.id) {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(quote.text)
-                                                .lineLimit(3)
-                                            if let page = quote.pageReference, !page.isEmpty {
-                                                Text("P. \(page)")
-                                                    .font(.caption)
-                                                    .foregroundStyle(.secondary)
-                                            }
-                                        }
-                                    }
-                                    .contextMenu {
-                                        Button("Eliminar", role: .destructive) {
-                                            pendingDeleteQuoteId = quote.id
-                                            deleteTrigger += 1
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if viewModel.hasMore {
-                            Section {
-                                if viewModel.isLoadingNextPage {
-                                    ProgressView()
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                } else {
-                                    Color.clear
-                                        .frame(height: 1)
-                                        .task { await viewModel.loadNextPage() }
-                                }
-                            }
-                        }
-                    }
-                    .listStyle(.insetGrouped)
-                    .scrollDismissesKeyboard(.interactively)
-                    .task(id: deleteTrigger) {
-                        if deleteTrigger > 0, let id = pendingDeleteQuoteId {
-                            await viewModel.deleteQuote(quoteId: id)
-                            pendingDeleteQuoteId = nil
-                        }
-                    }
-                }
+                mainContent
 
             case .error(let message):
-                ContentUnavailableView(
-                    "Error",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(message)
-                )
+                VStack(spacing: 12) {
+                    ContentUnavailableView(
+                        "Error",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(message)
+                    )
+                    Button("Reintentar") {
+                        retryTrigger += 1
+                    }
+                    .buttonStyle(.bordered)
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
@@ -102,8 +59,115 @@ struct QuotesView: View {
             .padding()
         }
         .dismissKeyboardOnTapOutside()
-        .task {
+        .task(id: retryTrigger) {
             await viewModel.loadQuotes()
+        }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        switch viewModel.grouping {
+        case .byBook:
+            byBookContent
+        case .byAuthor:
+            byAuthorContent
+        }
+    }
+
+    @ViewBuilder
+    private var byBookContent: some View {
+        let items = viewModel.booksWithQuoteCount
+        let isEmpty = items.isEmpty
+        let isSearchEmpty = !viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+
+        if isEmpty {
+            ContentUnavailableView(
+                isSearchEmpty ? emptySearchMessage : emptyQuotesMessage,
+                systemImage: isSearchEmpty ? "magnifyingglass" : "quote.closing",
+                description: Text(isSearchEmpty ? emptySearchSuggestion : emptyQuotesSuggestion)
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ScrollView {
+                LazyVGrid(columns: gridColumns, spacing: 20) {
+                    ForEach(items, id: \.0.id) { item in
+                        NavigationLink(value: QuotesRoute.bookQuotes(bookId: item.0.id)) {
+                            QuotesBookCellView(book: item.0, quoteCount: item.1)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    paginationTrigger
+                }
+                .padding()
+            }
+            .scrollDismissesKeyboard(.interactively)
+        }
+    }
+
+    @ViewBuilder
+    private var byAuthorContent: some View {
+        let items = viewModel.authorsWithQuoteCount
+        let isEmpty = items.isEmpty
+        let isSearchEmpty = !viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+
+        if isEmpty {
+            ContentUnavailableView(
+                isSearchEmpty ? emptySearchMessage : emptyQuotesMessage,
+                systemImage: isSearchEmpty ? "magnifyingglass" : "quote.closing",
+                description: Text(isSearchEmpty ? emptySearchSuggestion : emptyQuotesSuggestion)
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            List {
+                ForEach(items, id: \.name) { item in
+                    NavigationLink(value: QuotesRoute.authorQuotes(authorName: item.name)) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.name)
+                                .font(.headline)
+                            Text("\(item.count) \(item.count == 1 ? "cita guardada" : "citas guardadas")")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                paginationSection
+            }
+            .listStyle(.insetGrouped)
+            .scrollDismissesKeyboard(.interactively)
+        }
+    }
+
+    @ViewBuilder
+    private var paginationTrigger: some View {
+        if viewModel.hasMore {
+            if viewModel.isLoadingNextPage {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+            } else {
+                Color.clear
+                    .frame(height: 1)
+                    .task { await viewModel.loadNextPage() }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var paginationSection: some View {
+        if viewModel.hasMore {
+            Section {
+                if viewModel.isLoadingNextPage {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                } else {
+                    Color.clear
+                        .frame(height: 1)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .task { await viewModel.loadNextPage() }
+                }
+            }
         }
     }
 }
@@ -117,7 +181,7 @@ struct QuotesView: View {
         Quote(id: UUID(), text: "La memoria es un espejo que nos miente.", bookId: bookId, pageReference: nil, createdAt: Date()),
     ]
     let books = [
-        Book(id: bookId, isbn: "978-0-00-000000-0", authors: [Author(id: UUID(), name: "José Emilio Pacheco")], title: "El viento distante", numberOfPages: nil, publisher: nil, publicationDate: nil, thumbnailURL: nil, bookDescription: nil, subtitle: nil, language: "es", isFavorite: false, readingStatus: .none),
+        Book(id: bookId, isbn: "978-0-00-000000-0", authors: [Author(id: UUID(), name: "José Emilio Pacheco")], title: "El viento distante", numberOfPages: nil, publisher: nil, publicationDate: nil, thumbnailURL: nil, bookDescription: nil, subtitle: nil, language: "es", isFavorite: false, readingStatus: .none, currentPage: nil),
     ]
     let vm = QuotesViewModel(
         fetchQuotesUseCase: PreviewFetchQuotesUseCase(quotes: quotes),

@@ -43,7 +43,8 @@ enum FilterOption: Hashable {
     case read
     case reading
     case favorites
-    
+    case pending
+
     var displayName: String {
         switch self {
         case .none:
@@ -54,6 +55,8 @@ enum FilterOption: Hashable {
             "Leyendo"
         case .favorites:
             "Favoritos"
+        case .pending:
+            "Por leer"
         }
     }
 }

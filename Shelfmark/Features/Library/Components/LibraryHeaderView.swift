@@ -13,10 +13,13 @@ struct LibraryHeaderView: View {
     @Bindable var viewModel: LibraryViewModel
     
     var body: some View {
-        HStack(spacing: 8) {
-            filterButton(.read)
-            filterButton(.reading)
-            filterButton(.favorites)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                filterButton(.reading)
+                filterButton(.read)
+                filterButton(.favorites)
+                filterButton(.pending)
+            }
         }
         .padding(.horizontal)
     }

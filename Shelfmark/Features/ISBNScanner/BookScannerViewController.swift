@@ -20,12 +20,12 @@ final class BookScannerViewController: UIViewController {
         super.viewDidLoad()
         
         guard DataScannerViewController.isSupported else {
-            print("El dispositivo no soporta VisionKit")
+            assertionFailure("El dispositivo no soporta VisionKit.")
             return
         }
         
         guard DataScannerViewController.isAvailable else {
-            print("La cámara no está disponible")
+            assertionFailure("La cámara no está disponible.")
             return
         }
         

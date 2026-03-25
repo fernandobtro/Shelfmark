@@ -14,10 +14,12 @@ struct BookDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let container: AppDIContainer
     @State private var bookToEdit: Book?
+    @State private var bookForNewQuote: Book?
     @State private var isShowingDeleteAlert = false
     @State private var isDeleting = false
     @State private var retryTrigger = 0
     @State private var deleteTrigger = 0
+    @State private var currentPageDraft = ""
 
     var body: some View {
         Group {
@@ -51,6 +53,12 @@ struct BookDetailView: View {
             retryTrigger += 1
         }) { book in
             container.makeAddEditBookView(mode: .edit(existing: book))
+        }
+        .sheet(item: $bookForNewQuote) { book in
+            AddEditQuoteView(
+                viewModel: container.makeAddEditQuoteViewModel(mode: .addForBook(book)),
+                onDelete: nil
+            )
         }
         .task(id: retryTrigger) {
             await viewModel.loadDetail()
@@ -100,37 +108,64 @@ struct BookDetailView: View {
                 }
                 .padding(.horizontal)
 
-                // Chips de acciones principales
-                HStack(spacing: 12) {
-                    Label(book.isFavorite ? "Favorito" : "Marcar favorito",
-                          systemImage: book.isFavorite ? "heart.fill" : "heart")
-                        .font(.subheadline.weight(.medium))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule().fill(Color.theme.secondaryBackground)
-                        )
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        Button {
+                            Task { await viewModel.toggleFavorite() }
+                        } label: {
+                            Label(book.isFavorite ? "Favorito" : "Marcar favorito",
+                                  systemImage: book.isFavorite ? "heart.fill" : "heart")
+                                .font(.subheadline.weight(.medium))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule().fill(Color.theme.secondaryBackground)
+                                )
+                        }
+                        .buttonStyle(.plain)
 
-                    Label(readingStatusDisplayName(book.readingStatus), systemImage: "book")
-                        .font(.subheadline.weight(.medium))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule().fill(Color.theme.secondaryBackground)
-                        )
+                        Menu {
+                            ForEach(ReadingStatus.allCases, id: \.self) { status in
+                                Button(status.displayName) {
+                                    Task { await viewModel.setReadingStatus(status) }
+                                }
+                            }
+                        } label: {
+                            Label(readingStatusDisplayName(book.readingStatus), systemImage: "book")
+                                .font(.subheadline.weight(.medium))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule().fill(Color.theme.secondaryBackground)
+                                )
+                        }
 
-                    Button {
-                        bookToEdit = book
-                    } label: {
-                        Label("Editar", systemImage: "pencil")
-                            .font(.subheadline.weight(.medium))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule().fill(Color.theme.secondaryBackground)
-                            )
+                        Button {
+                            bookToEdit = book
+                        } label: {
+                            Label("Editar", systemImage: "pencil")
+                                .font(.subheadline.weight(.medium))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule().fill(Color.theme.secondaryBackground)
+                                )
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            bookForNewQuote = book
+                        } label: {
+                            Label("Añadir cita", systemImage: "quote.bubble")
+                                .font(.subheadline.weight(.medium))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule().fill(Color.theme.secondaryBackground)
+                                )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
                 .foregroundStyle(Color.theme.textPrimary)
                 .padding(.horizontal)
@@ -171,6 +206,87 @@ struct BookDetailView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             detailRow(title: "Favorito", value: book.isFavorite ? "Sí" : "No")
                             detailRow(title: "Estado", value: readingStatusDisplayName(book.readingStatus))
+                            if let p = book.currentPage {
+                                detailRow(title: "Página actual", value: "\(p)")
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Progreso de lectura")
+                            .font(.headline)
+
+                        HStack(spacing: 8) {
+                            Button("Reiniciar progreso") {
+                                Task { await viewModel.resetProgress() }
+                            }
+                            .buttonStyle(.bordered)
+
+                            Button("Marcar como leído") {
+                                Task { await viewModel.markAsCompleted() }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.primaryGreen)
+
+                            Button("Volver a pendiente") {
+                                Task { await viewModel.markAsPending() }
+                            }
+                            .buttonStyle(.bordered)
+                        }
+
+                        HStack(spacing: 8) {
+                            TextField("Página actual", text: $currentPageDraft)
+                                .keyboardType(.numberPad)
+                                .textFieldStyle(.roundedBorder)
+
+                            Button("Guardar") {
+                                Task { await viewModel.saveCurrentPage(from: currentPageDraft) }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.primaryGreen)
+                        }
+
+                        if let err = viewModel.quickSaveError, !err.isEmpty {
+                            Text(err)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
+
+                        if let frac = book.readingProgressFraction,
+                           let cur = book.currentPage,
+                           let total = book.numberOfPages {
+                            ProgressView(value: frac, total: 1.0)
+                            Text("\(min(max(cur, 1), total)) / \(total) páginas")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if !viewModel.quotesForBook.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Citas de este libro")
+                                .font(.headline)
+
+                            let quotes = viewModel.quotesForBook
+                            let count = quotes.count
+
+                            Text(count == 1 ? "1 cita guardada" : "\(count) citas guardadas")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(quotes.prefix(3), id: \.id) { quote in
+                                    Text("“\(quote.text)”")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(3)
+                                }
+                            }
+
+                            NavigationLink(value: QuotesRoute.bookQuotes(bookId: book.id)) {
+                                Text("Ver todas las citas de este libro")
+                                    .font(.subheadline.weight(.semibold))
+                            }
                         }
                     }
                 }
@@ -204,6 +320,12 @@ struct BookDetailView: View {
             Button("Cancelar", role: .cancel) {}
         } message: {
             Text("Esta acción eliminará el libro de tu biblioteca. No se puede deshacer.")
+        }
+        .onAppear {
+            currentPageDraft = book.currentPage.map(String.init) ?? ""
+        }
+        .onChange(of: book) { _, newBook in
+            currentPageDraft = newBook.currentPage.map(String.init) ?? ""
         }
     }
 
@@ -261,7 +383,8 @@ struct BookDetailView: View {
         subtitle: "O ida y vuelta",
         language: "es",
         isFavorite: false,
-        readingStatus: .none
+        readingStatus: .none,
+        currentPage: 42
     )
 
     NavigationStack {
@@ -269,7 +392,9 @@ struct BookDetailView: View {
             viewModel: BookDetailViewModel(
                 bookId: sampleBook.id,
                 fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: sampleBook),
-                deleteBookUseCase: MockDeleteBookUseCase()
+                deleteBookUseCase: MockDeleteBookUseCase(),
+                fetchQuotesUseCase: MockFetchQuotesUseCase(quotes: []),
+                saveBookUseCase: MockSaveBookUseCase()
             ),
             container: container
         )
@@ -284,8 +409,10 @@ struct BookDetailView: View {
 
         @State private var viewModel = BookDetailViewModel(
             bookId: UUID(),
-            fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: nil),
-            deleteBookUseCase: MockDeleteBookUseCase()
+                fetchBookDetailUseCase: MockFetchBookDetailUseCase(book: nil),
+                deleteBookUseCase: MockDeleteBookUseCase(),
+                fetchQuotesUseCase: MockFetchQuotesUseCase(quotes: []),
+                saveBookUseCase: MockSaveBookUseCase()
         )
 
         var body: some View {
@@ -309,4 +436,17 @@ private struct MockFetchBookDetailUseCase: FetchBookDetailUseCaseProtocol {
 
 private struct MockDeleteBookUseCase: DeleteBookUseCaseProtocol {
     func execute(bookId: UUID) async throws { }
+}
+
+private struct MockFetchQuotesUseCase: FetchQuotesUseCaseProtocol {
+    let quotes: [Quote]
+
+    func execute() async throws -> [Quote] { quotes }
+    func executePaginated(limit: Int, offset: Int) async throws -> [Quote] {
+        Array(quotes.dropFirst(offset).prefix(limit))
+    }
+}
+
+private struct MockSaveBookUseCase: SaveBookUseCaseProtocol {
+    func execute(_ book: Book) async throws {}
 }

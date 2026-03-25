@@ -64,9 +64,10 @@ final class QuotesViewModel {
             async let quotesTask = fetchQuotesUseCase.executePaginated(limit: pageSize, offset: 0)
             async let booksTask = fetchLibraryUseCase.execute()
             let (quotes, libraryBooks) = try await (quotesTask, booksTask)
+            let dedupedQuotes = deduplicateQuotes(quotes)
             await MainActor.run {
                 books = libraryBooks
-                state = .loaded(quotes: quotes)
+                state = .loaded(quotes: dedupedQuotes)
                 currentOffset = quotes.count
                 if quotes.count < pageSize {
                     hasMore = false
@@ -86,8 +87,9 @@ final class QuotesViewModel {
         defer { isLoadingNextPage = false }
         do {
             let newPage = try await fetchQuotesUseCase.executePaginated(limit: pageSize, offset: currentOffset)
+            let mergedQuotes = deduplicateQuotes(existingQuotes + newPage)
             await MainActor.run {
-                state = .loaded(quotes: existingQuotes + newPage)
+                state = .loaded(quotes: mergedQuotes)
                 currentOffset += newPage.count
                 if newPage.count < pageSize {
                     hasMore = false
@@ -149,6 +151,61 @@ final class QuotesViewModel {
             }
             if filteredQuotes.isEmpty { return nil }
             return (key: section.key, quotes: filteredQuotes)
+        }
+    }
+
+    /// Libros con citas (para vista "Por libro"): libro + número de citas. Respetan búsqueda.
+    var booksWithQuoteCount: [(Book, Int)] {
+        guard case .loaded(let quotes) = state else { return [] }
+        let bookById = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = query.isEmpty ? nil : query.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current)
+        let quotesToUse: [Quote]
+        if let n = normalized {
+            quotesToUse = quotes.filter { q in
+                q.text.localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(n)
+                || (bookById[q.bookId].map { b in
+                    (b.title + " " + b.authors.map(\.name).joined(separator: " "))
+                        .localizedLowercase.folding(options: .diacriticInsensitive, locale: .current).contains(n)
+                } ?? false)
+            }
+        } else {
+            quotesToUse = quotes
+        }
+        let grouped = Dictionary(grouping: quotesToUse, by: { $0.bookId })
+        return grouped.keys.compactMap { bookId -> (Book, Int)? in
+            guard let book = bookById[bookId], let list = grouped[bookId] else { return nil }
+            return (book, list.count)
+        }.sorted { $0.0.title.localizedCaseInsensitiveCompare($1.0.title) == .orderedAscending }
+    }
+
+    /// Autores con número de citas (para vista "Por autor"). Respetan búsqueda.
+    var authorsWithQuoteCount: [(name: String, count: Int)] {
+        guard grouping == .byAuthor else { return [] }
+        return filteredSectionedQuotes.map { (name: $0.key, count: $0.quotes.count) }
+    }
+
+    /// Citas de un libro (para navegación a lista por libro).
+    func quotes(forBookId bookId: UUID) -> [Quote] {
+        guard case .loaded(let quotes) = state else { return [] }
+        return quotes.filter { $0.bookId == bookId }
+    }
+
+    /// Citas de un autor (para navegación a lista por autor).
+    func quotes(forAuthor authorName: String) -> [Quote] {
+        let bookById = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
+        guard case .loaded(let quotes) = state else { return [] }
+        return quotes.filter { bookById[$0.bookId]?.authors.first?.name == authorName }
+    }
+
+    /// Evita IDs duplicados de citas para no romper ForEach y mantiene orden por fecha descendente.
+    private func deduplicateQuotes(_ quotes: [Quote]) -> [Quote] {
+        var seen: Set<UUID> = []
+        let sorted = quotes.sorted { $0.createdAt > $1.createdAt }
+        return sorted.filter { quote in
+            if seen.contains(quote.id) { return false }
+            seen.insert(quote.id)
+            return true
         }
     }
 }

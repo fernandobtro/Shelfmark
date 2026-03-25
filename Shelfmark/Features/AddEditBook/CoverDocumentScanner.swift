@@ -51,7 +51,7 @@ struct CoverDocumentScanner: UIViewControllerRepresentable {
         }
         
         func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
-            print("Failed to scan document: \(error.localizedDescription)")
+            assertionFailure("Failed to scan document: \(error.localizedDescription)")
             controller.dismiss(animated: true)
         }
     }

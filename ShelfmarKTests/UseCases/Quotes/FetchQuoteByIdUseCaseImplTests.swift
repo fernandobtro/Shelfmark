@@ -6,6 +6,7 @@
 import XCTest
 @testable import Shelfmark
 
+@MainActor
 final class FetchQuoteByIdUseCaseImplTests: XCTestCase {
 
     func test_execute_whenRepositoryReturnsQuote_returnsSameQuote() async throws {
@@ -17,10 +18,12 @@ final class FetchQuoteByIdUseCaseImplTests: XCTestCase {
         let sut = FetchQuoteByIdUseCaseImpl(repository: mock)
 
         let result = try await sut.execute(quoteId: quoteId)
+        let resultId = result?.id
+        let resultText = result?.text
 
         XCTAssertNotNil(result)
-        XCTAssertEqual(result?.id, quoteId)
-        XCTAssertEqual(result?.text, "Found")
+        XCTAssertEqual(resultId, quoteId)
+        XCTAssertEqual(resultText, "Found")
         XCTAssertEqual(mock.fetchByIdCallCount, 1)
         XCTAssertEqual(mock.lastFetchById, quoteId)
     }

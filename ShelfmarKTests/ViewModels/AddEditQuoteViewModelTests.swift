@@ -9,7 +9,7 @@ import XCTest
 @MainActor
 final class AddEditQuoteViewModelTests: XCTestCase {
 
-    func test_load_addMode_setsBooksAndFirstBookSelected() async {
+    func test_load_addMode_setsBooksWithoutSelectingBook() async {
         let book = makeSampleBook(title: "First Book")
         let fetchLibraryMock = MockFetchLibraryUseCase()
         fetchLibraryMock.booksToReturn = [book]
@@ -29,14 +29,14 @@ final class AddEditQuoteViewModelTests: XCTestCase {
         await sut.load()
 
         XCTAssertEqual(sut.books.count, 1)
-        XCTAssertEqual(sut.selectedBookId, book.id)
+        XCTAssertNil(sut.selectedBookId)
         XCTAssertFalse(sut.isLoading)
         XCTAssertNil(sut.errorMessage)
         XCTAssertEqual(fetchLibraryMock.executeCallCount, 1)
         XCTAssertEqual(fetchQuoteMock.executeCallCount, 0)
     }
 
-    func test_load_addWithInitialText_setsTextAndFirstBook() async {
+    func test_load_addWithInitialText_setsTextWithoutSelectingBook() async {
         let book = makeSampleBook()
         let fetchLibraryMock = MockFetchLibraryUseCase()
         fetchLibraryMock.booksToReturn = [book]
@@ -56,7 +56,7 @@ final class AddEditQuoteViewModelTests: XCTestCase {
         await sut.load()
 
         XCTAssertEqual(sut.text, "Scanned text")
-        XCTAssertEqual(sut.selectedBookId, book.id)
+        XCTAssertNil(sut.selectedBookId)
         XCTAssertEqual(fetchLibraryMock.executeCallCount, 1)
     }
 
@@ -108,7 +108,7 @@ final class AddEditQuoteViewModelTests: XCTestCase {
         )
         await sut.load()
         sut.text = " New quote content "
-        sut.selectedBookId = book.id
+        sut.selectedBook = book
 
         await sut.save()
 
@@ -133,7 +133,7 @@ final class AddEditQuoteViewModelTests: XCTestCase {
         )
         await sut.load()
         sut.text = "   "
-        sut.selectedBookId = sut.books.first?.id
+        sut.selectedBook = sut.books.first
 
         await sut.save()
 
@@ -157,7 +157,7 @@ final class AddEditQuoteViewModelTests: XCTestCase {
         )
         await sut.load()
         sut.text = "Quote"
-        sut.selectedBookId = nil
+        sut.selectedBook = nil
 
         await sut.save()
 

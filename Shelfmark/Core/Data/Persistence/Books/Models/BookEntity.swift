@@ -25,8 +25,9 @@ class BookEntity {
     var isFavorite: Bool
     /// SwiftData no persiste enums; guardamos el rawValue del dominio (ReadingStatus).
     var readingStatusRaw: String
+    var currentPage: Int?
 
-    init(id: UUID = UUID(), isbn: String, authors: [AuthorEntity], title: String, numberOfPages: Int? = nil, publisher: PublisherEntity? = nil, publicationDate: Date? = nil, thumbnailURL: URL? = nil, bookDescription: String? = nil, subtitle: String? = nil, language: String, isFavorite: Bool = false, readingStatusRaw: String = "none") {
+    init(id: UUID = UUID(), isbn: String, authors: [AuthorEntity], title: String, numberOfPages: Int? = nil, publisher: PublisherEntity? = nil, publicationDate: Date? = nil, thumbnailURL: URL? = nil, bookDescription: String? = nil, subtitle: String? = nil, language: String, isFavorite: Bool = false, readingStatusRaw: String = "none", currentPage: Int? = nil) {
         self.id = id
         self.isbn = isbn
         self.authors = authors
@@ -40,5 +41,6 @@ class BookEntity {
         self.language = language
         self.isFavorite = isFavorite
         self.readingStatusRaw = readingStatusRaw
+        self.currentPage = currentPage
     }
 }

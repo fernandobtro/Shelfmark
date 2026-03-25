@@ -26,7 +26,8 @@ enum PreviewHelpers {
             subtitle: nil,
             language: "es",
             isFavorite: false,
-            readingStatus: .none
+            readingStatus: .none,
+            currentPage: nil
         )
     }
 
@@ -44,7 +45,8 @@ enum PreviewHelpers {
             subtitle: "Una utopía ambigua",
             language: "es",
             isFavorite: true,
-            readingStatus: .read
+            readingStatus: .read,
+            currentPage: 120
         )
     }
 

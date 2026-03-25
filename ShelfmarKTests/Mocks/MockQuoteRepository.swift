@@ -25,6 +25,12 @@ final class MockQuoteRepository: QuoteRepositoryProtocol {
         return fetchAllResult
     }
 
+    func fetchPaginated(limit: Int, offset: Int) async throws -> [Quote] {
+        fetchAllCallCount += 1
+        if let errorToThrow { throw errorToThrow }
+        return Array(fetchAllResult.dropFirst(offset).prefix(limit))
+    }
+
     func fetch(by id: UUID) async throws -> Quote? {
         fetchByIdCallCount += 1
         lastFetchById = id

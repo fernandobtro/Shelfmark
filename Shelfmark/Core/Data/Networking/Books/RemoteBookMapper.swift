@@ -37,7 +37,22 @@ struct RemoteBookMapper {
         
         let publicationDate = Self.parsePublicationDate(volumeInfo.publishedDate)
         
-        return Book(id: UUID(), isbn: isbn, authors: authors, title: volumeInfo.title ?? "Unknown Title", numberOfPages: volumeInfo.pageCount, publisher: publisher, publicationDate: publicationDate, thumbnailURL: thumbnailURL, bookDescription: volumeInfo.description, subtitle: volumeInfo.subtitle, language: volumeInfo.language ?? "Unknown", isFavorite: false, readingStatus: .none)
+        return Book(
+            id: UUID(),
+            isbn: isbn,
+            authors: authors,
+            title: volumeInfo.title ?? "Unknown Title",
+            numberOfPages: volumeInfo.pageCount,
+            publisher: publisher,
+            publicationDate: publicationDate,
+            thumbnailURL: thumbnailURL,
+            bookDescription: volumeInfo.description,
+            subtitle: volumeInfo.subtitle,
+            language: volumeInfo.language ?? "Unknown",
+            isFavorite: false,
+            readingStatus: .none,
+            currentPage: nil
+        )
     }
     
     /// Parsea el string de fecha de la API (p. ej. "2020", "2020-01", "2020-01-15") a Date.

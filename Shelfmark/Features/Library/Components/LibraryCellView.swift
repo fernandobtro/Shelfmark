@@ -103,7 +103,8 @@ private struct Sample {
         subtitle: "O ida y vuelta",
         language: "es",
         isFavorite: false,
-        readingStatus: .reading
+        readingStatus: .reading,
+        currentPage: nil
     )
 }
 

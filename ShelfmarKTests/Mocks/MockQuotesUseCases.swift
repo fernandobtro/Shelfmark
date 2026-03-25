@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import CoreGraphics
 @testable import Shelfmark
 
 final class MockFetchQuotesUseCase: FetchQuotesUseCaseProtocol {
@@ -16,6 +15,12 @@ final class MockFetchQuotesUseCase: FetchQuotesUseCaseProtocol {
         executeCallCount += 1
         if let errorToThrow { throw errorToThrow }
         return quotesToReturn
+    }
+
+    func executePaginated(limit: Int, offset: Int) async throws -> [Quote] {
+        executeCallCount += 1
+        if let errorToThrow { throw errorToThrow }
+        return Array(quotesToReturn.dropFirst(offset).prefix(limit))
     }
 }
 
@@ -57,18 +62,6 @@ final class MockFetchQuoteByIdUseCase: FetchQuoteByIdUseCaseProtocol {
     }
 }
 
-final class MockRecognizeTextInImageUseCase: RecognizeTextInImageUseCaseProtocol {
-    var textToReturn: String = ""
-    var errorToThrow: Error?
-    var executeCallCount = 0
-
-    func execute(image: CGImage) async throws -> String {
-        executeCallCount += 1
-        if let errorToThrow { throw errorToThrow }
-        return textToReturn
-    }
-}
-
 final class MockFetchLibraryUseCase: FetchLibraryUseCaseProtocol {
     var booksToReturn: [Book] = []
     var errorToThrow: Error?
@@ -78,6 +71,12 @@ final class MockFetchLibraryUseCase: FetchLibraryUseCaseProtocol {
         executeCallCount += 1
         if let errorToThrow { throw errorToThrow }
         return booksToReturn
+    }
+
+    func executePaginated(limit: Int, offset: Int) async throws -> [Book] {
+        executeCallCount += 1
+        if let errorToThrow { throw errorToThrow }
+        return Array(booksToReturn.dropFirst(offset).prefix(limit))
     }
 }
 

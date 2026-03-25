@@ -37,6 +37,11 @@ struct QuoteDetailView: View {
                             Text("— \(authorName), \(b.title).\(pageStr)")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
+
+                            NavigationLink(value: QuotesRoute.bookDetail(bookId: b.id)) {
+                                Label("Abrir libro", systemImage: "book")
+                                    .font(.subheadline.weight(.semibold))
+                            }
                         } else if let page = quote.pageReference, !page.isEmpty {
                             Text("P. \(page)")
                                 .font(.caption)

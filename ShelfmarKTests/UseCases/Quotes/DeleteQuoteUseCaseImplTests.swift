@@ -6,6 +6,7 @@
 import XCTest
 @testable import Shelfmark
 
+@MainActor
 final class DeleteQuoteUseCaseImplTests: XCTestCase {
 
     func test_execute_callsRepositoryDeleteWithQuoteId() async throws {

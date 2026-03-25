@@ -29,7 +29,8 @@ final class LookUpByISBNUseCaseImplTests: XCTestCase {
             subtitle: nil,
             language: "es",
             isFavorite: false,
-            readingStatus: .none
+            readingStatus: .none,
+            currentPage: nil
         )
         mockRepo.resultToReturn = book
 

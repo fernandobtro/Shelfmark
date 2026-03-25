@@ -13,6 +13,7 @@ struct ReadingListDetailView: View {
     let container: AppDIContainer
     @State private var pendingRemoveBookId: UUID?
     @State private var removeTrigger = 0
+    @State private var retryTrigger = 0
 
     var body: some View {
         Group {
@@ -35,11 +36,17 @@ struct ReadingListDetailView: View {
                 }
 
             case .error(let message):
-                ContentUnavailableView(
-                    "Error",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(message)
-                )
+                VStack(spacing: 12) {
+                    ContentUnavailableView(
+                        "Error",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(message)
+                    )
+                    Button("Reintentar") {
+                        retryTrigger += 1
+                    }
+                    .buttonStyle(.bordered)
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
@@ -62,7 +69,7 @@ struct ReadingListDetailView: View {
                 onDismiss: { viewModel.isPresentingAddBooksSheet = false }
             )
         }
-        .task {
+        .task(id: retryTrigger) {
             await viewModel.load()
         }
         .task(id: removeTrigger) {
@@ -150,13 +157,16 @@ struct ReadingListDetailView: View {
     private func booksSection(_ books: [Book]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(books, id: \.id) { book in
-                LibraryCellView(book: book)
-                    .contextMenu {
-                        Button("Quitar de la lista", role: .destructive) {
-                            pendingRemoveBookId = book.id
-                            removeTrigger += 1
-                        }
+                NavigationLink(value: ListsRoute.book(book.id)) {
+                    LibraryCellView(book: book)
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button("Quitar de la lista", role: .destructive) {
+                        pendingRemoveBookId = book.id
+                        removeTrigger += 1
                     }
+                }
             }
         }
         .padding(.horizontal)
@@ -209,7 +219,8 @@ struct ReadingListDetailView: View {
             subtitle: nil,
             language: "es",
             isFavorite: false,
-            readingStatus: .none
+            readingStatus: .none,
+            currentPage: nil
         ),
     ]
     let vm = ReadingListDetailViewModel(

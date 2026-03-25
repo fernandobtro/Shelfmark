@@ -67,6 +67,11 @@ struct AddEditBookView: View {
                     }
                 }
 
+                Section("Progreso de lectura") {
+                    TextField("Página actual (opcional)", text: $viewModel.currentPageText)
+                        .keyboardType(.numberPad)
+                }
+
                 if let error = viewModel.errorMessage {
                     Section {
                         Text(error)

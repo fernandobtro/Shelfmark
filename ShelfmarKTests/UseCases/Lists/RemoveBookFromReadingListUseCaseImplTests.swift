@@ -6,6 +6,7 @@
 import XCTest
 @testable import Shelfmark
 
+@MainActor
 final class RemoveBookFromReadingListUseCaseImplTests: XCTestCase {
 
     func test_execute_callsRepositoryWithBookIdAndListId() async throws {

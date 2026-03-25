@@ -19,15 +19,13 @@ struct RootView: View {
     @State private var isPresentingScanner = false
     @State private var isPresentingAddBook = false
     @State private var showCreateListSheet = false
-    @State private var showAddQuoteOptionsDialog = false
-    @State private var showScanQuoteSheet = false
     @State private var showAddEditQuoteSheet = false
-    @State private var quoteScannerViewModel: QuoteScannerViewModel?
     @State private var scannerViewModel: BookScannerViewModel?
     @State private var bookToAddFromScanner: Book?
     @State private var showNotFoundAlert = false
     @State private var refreshLibraryTrigger = 0
     @State private var refreshQuotesTrigger = 0
+    @State private var showLibraryStats = false
 
     init(container: AppDIContainer) {
         self.container = container
@@ -54,7 +52,7 @@ struct RootView: View {
                     case .lists:
                         showCreateListSheet = true
                     case .quotes:
-                        showAddQuoteOptionsDialog = true
+                        showAddEditQuoteSheet = true
                     case .profile:
                         break
                     }
@@ -133,26 +131,6 @@ struct RootView: View {
                 onDismiss: { showCreateListSheet = false }
             )
         }
-        .confirmationDialog("Añadir cita", isPresented: $showAddQuoteOptionsDialog, titleVisibility: .visible) {
-            Button("Escanear cita") {
-                quoteScannerViewModel = container.makeQuoteScannerViewModel()
-                showScanQuoteSheet = true
-            }
-            Button("Añadir manualmente") {
-                showAddEditQuoteSheet = true
-            }
-            Button("Cancelar", role: .cancel) {}
-        } message: {
-            Text("Usa la cámara para escanear texto o añade la cita a mano.")
-        }
-        .sheet(isPresented: $showScanQuoteSheet, onDismiss: {
-            quoteScannerViewModel = nil
-            refreshQuotesTrigger += 1
-        }) {
-            if let vm = quoteScannerViewModel {
-                QuoteScannerView(viewModel: vm, container: container)
-            }
-        }
         .sheet(isPresented: $showAddEditQuoteSheet, onDismiss: {
             refreshQuotesTrigger += 1
         }) {
@@ -178,30 +156,59 @@ struct RootView: View {
         switch selectedTab {
         case .library:
             NavigationStack {
-                LibraryView(viewModel: libraryViewModel)
+                LibraryView(
+                    viewModel: libraryViewModel,
+                    onStatsTap: { showLibraryStats = true }
+                )
                     .navigationDestination(for: UUID.self) { bookId in
                         let viewModel = container.makeBookDetailViewModel(bookId: bookId)
                         BookDetailView(viewModel: viewModel, container: container)
+                    }
+                    .navigationDestination(isPresented: $showLibraryStats) {
+                        LibraryStatsView(viewModel: container.makeLibraryStatsViewModel())
                     }
             }
 
         case .lists:
             NavigationStack {
                 ListsView(viewModel: listsViewModel)
-                    .navigationDestination(for: UUID.self) { listId in
-                        ReadingListDetailView(viewModel: container.makeReadingListDetailViewModel(listId: listId), container: container)
+                    .navigationDestination(for: ListsRoute.self) { route in
+                        switch route {
+                        case .list(let listId):
+                            ReadingListDetailView(
+                                viewModel: container.makeReadingListDetailViewModel(listId: listId),
+                                container: container
+                            )
+                        case .book(let bookId):
+                            BookDetailView(
+                                viewModel: container.makeBookDetailViewModel(bookId: bookId),
+                                container: container
+                            )
+                        }
                     }
             }
 
         case .quotes:
             NavigationStack {
                 QuotesView(viewModel: quotesViewModel, container: container)
-                    .navigationDestination(for: UUID.self) { quoteId in
+                .navigationDestination(for: QuotesRoute.self) { route in
+                    switch route {
+                    case .quoteDetail(let quoteId):
                         QuoteDetailView(
                             viewModel: container.makeQuoteDetailViewModel(quoteId: quoteId),
                             container: container
                         )
+                    case .bookQuotes(let bookId):
+                        BookQuotesListView(bookId: bookId, viewModel: quotesViewModel, container: container)
+                    case .authorQuotes(let authorName):
+                        AuthorQuotesListView(authorName: authorName, viewModel: quotesViewModel, container: container)
+                    case .bookDetail(let bookId):
+                        BookDetailView(
+                            viewModel: container.makeBookDetailViewModel(bookId: bookId),
+                            container: container
+                        )
                     }
+                }
             }
 
         case .profile:
