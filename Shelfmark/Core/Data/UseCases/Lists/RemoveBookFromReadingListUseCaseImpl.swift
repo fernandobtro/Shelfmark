@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Implements `RemoveBookFromReadingListUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `RemoveBookFromReadingListUseCase` using data repositories.
 final class RemoveBookFromReadingListUseCaseImpl: RemoveBookFromReadingListUseCaseProtocol {
     
     private let repository: ReadingListRepositoryProtocol

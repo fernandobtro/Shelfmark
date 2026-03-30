@@ -2,9 +2,12 @@
 //  ReadingStats.swift
 //  Shelfmark
 //
+//  Purpose: Domain entity `ReadingStats`.
+//
 
 import Foundation
 
+/// Domain entity `ReadingStats`.
 struct ReadingStats: Equatable {
     let totalBooks: Int
     let completedBooks: Int

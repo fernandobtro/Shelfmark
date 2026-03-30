@@ -2,18 +2,21 @@
 //  RemoteBookMapperTests.swift
 //  ShelfmarKTests
 //
-//  Un test de ejemplo por categoría + comentarios con los que faltan y qué validar.
+//  Example test per category with guidance comments for additional coverage.
+//
+//  Purpose: Unit tests for `RemoteBookMapperTests`.
 //
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `RemoteBookMapperTests`.
 @MainActor
 final class RemoteBookMapperTests: XCTestCase {
 
-    // MARK: - Ejemplo implementado
+    // MARK: - Implemented Example
 
-    /// Con un DTO válido (un item con volumeInfo), map devuelve un Book con título, ISBN y autores correctos.
+    /// With a valid DTO payload (one item with volumeInfo), map returns a `Book` with title, ISBN, and authors.
     func test_map_conDTOValido_devuelveBookConDatosMapeados() throws {
         let json = """
         {
@@ -48,7 +51,7 @@ final class RemoteBookMapperTests: XCTestCase {
         XCTAssertEqual(result?.bookDescription, "Descripción")
     }
 
-    // MARK: - Más casos
+    // MARK: - Additional Cases
 
     func test_map_conItemsVacio_devuelveNil() throws {
         let json = """

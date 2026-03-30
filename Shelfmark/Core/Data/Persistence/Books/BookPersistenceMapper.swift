@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: SwiftData persistence component `BookPersistenceMapper`.
+//
 
 import Foundation
 
+/// SwiftData persistence component `BookPersistenceMapper`.
 enum BookPersistenceMapper {
     nonisolated static func toDomain(_ entity: BookEntity) -> Book {
         let authors: [Author] = entity.authors.map(AuthorPersistenceMapper.toDomain)

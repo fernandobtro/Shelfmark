@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Reading list detail state manager for loading list data and mutating membership.
+//
 
 import Foundation
 import Observation
 
+/// Coordinates list detail reads plus add/remove-book flows for a single list.
 @Observable
 final class ReadingListDetailViewModel {
 
@@ -26,7 +29,7 @@ final class ReadingListDetailViewModel {
         return list.name
     }
 
-    /// IDs de los libros que ya están en la lista (para el sheet "Añadir libros").
+    /// Identifiers for books already present in the list (used by the Add Books sheet).
     var bookIdsInList: Set<UUID> {
         guard case .loaded(_, let books) = state else { return [] }
         return Set(books.map(\.id))

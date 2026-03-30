@@ -4,12 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 06/03/26.
 //
+//  Purpose: HTTP data source for Google Books ISBN lookup requests.
+//
 
 import Foundation
- /*
-  Implementa la llamada HTTP y devuelve un DTO o un tipo intermedio (No tiene por que ser Book aún
-  */
 
+/// Performs remote network calls and returns decoded DTO payloads.
 final class RemoteBookDataSource {
     private let session: URLSession
     private let apiKey: String

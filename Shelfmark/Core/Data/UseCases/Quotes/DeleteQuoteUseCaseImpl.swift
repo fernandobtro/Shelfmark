@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Implements `DeleteQuoteUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `DeleteQuoteUseCase` using data repositories.
 final class DeleteQuoteUseCaseImpl: DeleteQuoteUseCaseProtocol {
     
     private let repository: QuoteRepositoryProtocol

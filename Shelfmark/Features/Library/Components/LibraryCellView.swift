@@ -4,15 +4,18 @@
 //
 //  Created by Fernando Buenrostro on 05/03/26.
 //
+//  Purpose: Library grid/list cell that renders cover art, title, author, and contextual actions.
+//
 
 import Foundation
 import SwiftUI
 import Kingfisher
 
+/// Presents one library book tile with image loading and lightweight metadata.
 struct LibraryCellView: View {
     let book: Book
 
-    /// Tamaño de miniatura para caché y downsampling (evita retener imágenes a resolución completa).
+    /// Thumbnail size used for cache/downsampling to avoid retaining full-resolution images.
     private static let thumbnailSize = CGSize(width: 200, height: 300)
 
     private var authorsText: String {
@@ -28,10 +31,10 @@ struct LibraryCellView: View {
 
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
-            // Portada
+            // Cover
             ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemGray6))
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.theme.secondaryBackground.opacity(0.7))
 
                 if let url = book.thumbnailURL {
                     KFImage(url)
@@ -43,7 +46,7 @@ struct LibraryCellView: View {
                         .cancelOnDisappear(true)
                         .resizable()
                         .scaledToFill()
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 } else {
                     Image(systemName: "book.closed")
                         .font(.largeTitle)
@@ -51,15 +54,16 @@ struct LibraryCellView: View {
                 }
             }
             .aspectRatio(2/3, contentMode: .fit)
-            .shadow(color: .black.opacity(0.12), radius: 6, x: 0, y: 3)
+            .shadow(color: .black.opacity(0.16), radius: 8, x: 0, y: 4)
 
-            // Título, autor y estado
+            // Title, author, state
             VStack(spacing: 4) {
                 Text(book.title)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.9)
 
                 if !authorsText.isEmpty {
                     Text(authorsText)
@@ -88,7 +92,7 @@ struct LibraryCellView: View {
     }
 }
 
-// Preview de ejemplo
+// Example preview
 private struct Sample {
     static let book = Book(
         id: UUID(),

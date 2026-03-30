@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: SwiftData persistence component `ReadingListEntity`.
+//
 
 import Foundation
 import SwiftData
 
+/// SwiftData persistence component `ReadingListEntity`.
 @Model
 class ReadingListEntity {
     @Attribute(.unique) var id: UUID

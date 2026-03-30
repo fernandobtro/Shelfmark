@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Repository boundary `ReadingListRepositoryProtocol`.
+//
 
 import Foundation
 
+/// Repository boundary `ReadingListRepositoryProtocol`.
 protocol ReadingListRepositoryProtocol {
     func fetchAllLists() async throws -> [ReadingList]
     func fetchListsPaginated(limit: Int, offset: Int) async throws -> [ReadingList]

@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Application wiring component `ShelfmarkApp`.
+//
 
 import SwiftUI
 import SwiftData
 
+/// Application wiring component `ShelfmarkApp`.
 @main
 struct ShelfmarkApp: App {
     @State private var container: AppDIContainer?

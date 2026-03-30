@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Unit tests for `FetchReadingListUseCaseImplTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `FetchReadingListUseCaseImplTests`.
 @MainActor
 final class FetchReadingListUseCaseImplTests: XCTestCase {
 

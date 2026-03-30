@@ -2,10 +2,13 @@
 //  ReadingListDetailViewModelTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `ReadingListDetailViewModelTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `ReadingListDetailViewModelTests`.
 @MainActor
 final class ReadingListDetailViewModelTests: XCTestCase {
 

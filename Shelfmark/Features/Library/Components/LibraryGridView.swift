@@ -4,22 +4,26 @@
 //
 //  Created by Fernando Buenrostro on 05/03/26.
 //
+//  Purpose: Sectioned adaptive grid renderer for library content with lazy pagination trigger.
+//
 
 import Foundation
 import SwiftUI
 
+/// Renders sectioned library books in an adaptive grid and triggers incremental loading.
 struct LibraryGridView: View {
     let sections: [LibrarySection]
     let onDelete: (UUID) -> Void
     let hasMore: Bool
     let isLoadingNextPage: Bool
     let onLoadMore: () async -> Void
+    let minimumColumnWidth: Double
 
-    // Grid adaptable: ajusta el número de columnas según el ancho disponible.
-    // Mínimo ~140pt por celda para mantener una portada legible.
-    private let columns = [
-        GridItem(.adaptive(minimum: 140), spacing: 16)
-    ]
+    // Adaptive grid: adjusts column count based on available width.
+    // Minimum around 140pt per cell to keep covers readable.
+    private var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: minimumColumnWidth), spacing: 16)]
+    }
 
     var body: some View {
         if sections.isEmpty {
@@ -83,7 +87,8 @@ struct LibraryGridView: View {
             onDelete: { _ in },
             hasMore: false,
             isLoadingNextPage: false,
-            onLoadMore: { }
+            onLoadMore: { },
+            minimumColumnWidth: 140
         )
     }
 }

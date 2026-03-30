@@ -4,14 +4,17 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Quote form state manager for add/edit modes, book selection, and persistence.
+//
 
 import Foundation
 import Observation
 
+/// Loads quote context, validates input, and saves/deletes through quote use cases.
 enum AddEditQuoteMode {
     case add
     case addWithInitialText(String)
-    /// Crear una nueva cita preseleccionando un libro concreto (por ejemplo, desde BookDetailView).
+    /// Creates a new quote with a preselected book (for example, from `BookDetailView`).
     case addForBook(Book)
     case edit(quoteId: UUID)
 }
@@ -19,23 +22,29 @@ enum AddEditQuoteMode {
 @Observable
 final class AddEditQuoteViewModel {
     var text: String = ""
-    /// Libro actualmente seleccionado para la cita (obligatorio para guardar).
+    /// Currently selected book for the quote (required before save).
     var selectedBook: Book?
     var pageReference: String = ""
 
-    /// Biblioteca completa disponible para elegir libro en el selector.
+    /// Full library snapshot available to choose a book in the selector.
     var books: [Book] = []
     var isSaving = false
     var errorMessage: String?
     var isLoading = true
 
-    /// Conveniencia para las vistas: id del libro seleccionado.
+    /// Convenience value for views: selected book identifier.
     var selectedBookId: UUID? {
         selectedBook?.id
     }
 
     var isEditMode: Bool {
         if case .edit = mode { return true }
+        return false
+    }
+
+    /// True when the book was pre-selected by the caller (e.g. BookDetailView) and must not be changed.
+    var isBookLocked: Bool {
+        if case .addForBook = mode { return true }
         return false
     }
 
@@ -91,14 +100,14 @@ final class AddEditQuoteViewModel {
                 await MainActor.run {
                     books = library
                     text = initialText
-                    // No seleccionamos libro automáticamente: el usuario debe elegirlo.
+                    // Do not auto-select a book; user must explicitly pick one.
                     isLoading = false
                 }
 
             case .addForBook(let book):
                 await MainActor.run {
                     books = library
-                    // Intentamos usar la instancia de la biblioteca si existe, para mantener coherencia.
+                    // Prefer the in-library instance when available to keep data identity consistent.
                     selectedBook = library.first(where: { $0.id == book.id }) ?? book
                     isLoading = false
                 }
@@ -106,12 +115,15 @@ final class AddEditQuoteViewModel {
             case .add:
                 await MainActor.run {
                     books = library
-                    // Sin selección inicial: el usuario debe elegir libro en el selector.
+                    // Without initial selection, user must choose a book in the selector.
                     isLoading = false
                 }
             }
         } catch {
-            await MainActor.run { errorMessage = error.localizedDescription; isLoading = false }
+            await MainActor.run {
+                errorMessage = UserFacingError.message(error, fallback: "No se pudo cargar la información de la cita. Intenta de nuevo.")
+                isLoading = false
+            }
         }
     }
 
@@ -155,7 +167,10 @@ final class AddEditQuoteViewModel {
             try await saveQuoteUseCase.execute(quote: quote)
             await MainActor.run { errorMessage = nil; isSaving = false }
         } catch {
-            await MainActor.run { errorMessage = error.localizedDescription; isSaving = false }
+            await MainActor.run {
+                errorMessage = UserFacingError.message(error, fallback: "No se pudo guardar la cita. Intenta de nuevo.")
+                isSaving = false
+            }
         }
     }
 
@@ -165,7 +180,9 @@ final class AddEditQuoteViewModel {
             try await deleteQuoteUseCase.execute(quoteId: quoteId)
             await MainActor.run { errorMessage = nil }
         } catch {
-            await MainActor.run { errorMessage = error.localizedDescription }
+            await MainActor.run {
+                errorMessage = UserFacingError.message(error, fallback: "No se pudo eliminar la cita. Intenta de nuevo.")
+            }
         }
     }
 }

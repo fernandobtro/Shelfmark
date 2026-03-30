@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Domain entity `Book`.
+//
 
 import Foundation
 
+/// Domain entity `Book`.
 struct Book: Equatable, Identifiable {
     let id: UUID
     let isbn: String
@@ -21,12 +24,11 @@ struct Book: Equatable, Identifiable {
     let language: String
     let isFavorite: Bool
     let readingStatus: ReadingStatus
-    /// Página actual de lectura (opcional). Independiente del total de páginas del volumen.
     let currentPage: Int?
 }
 
 extension Book {
-    /// Progreso entre 0 y 1, o `nil` si falta página actual, total o el total no es válido.
+    /// Progress value in [0, 1], or `nil` when current/total pages are missing or invalid.
     var readingProgressFraction: Double? {
         guard let current = currentPage,
               let total = numberOfPages,
@@ -35,7 +37,7 @@ extension Book {
         return Double(clamped) / Double(total)
     }
 
-    /// Valida texto de página actual frente al total conocido. `text` vacío → sin error (se interpreta como borrar).
+    /// Validates current-page input against known total pages. Empty `text` means clear value and is valid.
     static func validationErrorMessage(currentPageText: String, numberOfPages: Int?) -> String? {
         let trimmed = currentPageText.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return nil }
@@ -55,7 +57,7 @@ extension Book {
     }
 }
 
-/// SwiftData no persiste enums personalizados. Usamos String como rawValue para guardar en BookEntity.
+/// SwiftData does not persist custom enums directly, store `ReadingStatus` as raw string in `BookEntity`.
 enum ReadingStatus: String, CaseIterable {
     case pending = "pending"
     case reading = "reading"

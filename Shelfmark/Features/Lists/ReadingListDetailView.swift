@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Reading list detail screen for list metadata and list membership actions.
+//
 
 import SwiftUI
 import Observation
 
+/// Displays one list with its books and routes add/remove interactions.
 struct ReadingListDetailView: View {
     @Bindable var viewModel: ReadingListDetailViewModel
     let container: AppDIContainer
@@ -80,11 +83,11 @@ struct ReadingListDetailView: View {
         }
     }
 
-    // MARK: - Secciones
+    // MARK: - Sections
 
     private func heroHeader(list: ReadingList, books: [Book]) -> some View {
         VStack(spacing: 16) {
-            // Mosaico 2x2 de portadas
+            // 2x2 cover mosaic
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(Color.theme.secondaryBackground)
@@ -131,26 +134,22 @@ struct ReadingListDetailView: View {
 
     private func emptyStateCTA() -> some View {
         VStack(spacing: 16) {
-            Text("Sin libros en esta lista")
-                .font(.headline)
-
-            Text("Añade libros desde tu biblioteca para empezar a llenarla.")
-                .font(.subheadline)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+            ContentUnavailableView(
+                "Sin libros en esta lista",
+                systemImage: "books.vertical",
+                description: Text("Añade libros desde tu biblioteca para empezar a llenarla.")
+            )
 
             Button {
                 viewModel.isPresentingAddBooksSheet = true
             } label: {
-                Text("Añadir mis primeros libros")
+                Label("Añadir mis primeros libros", systemImage: "plus")
                     .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
             }
             .buttonStyle(.borderedProminent)
             .tint(.primaryGreen)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16)
         .padding(.vertical, 32)
     }
 

@@ -4,16 +4,19 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Sheet picker for selecting a target book before saving a quote.
+//
 
 import SwiftUI
 
-/// Selector dedicado de libro para una cita, agrupando por estado de lectura.
+/// Lists candidate books grouped for fast selection in quote creation flow.
+/// Designed to be pushed via `navigationDestination`; uses `@Environment(\.dismiss)` to pop back.
 struct SelectBookForQuoteSheetView: View {
     let books: [Book]
     let preselectedBookId: UUID?
     let onSelect: (Book) -> Void
+    let onClose: () -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @State private var searchText: String = ""
 
     private var filteredBooks: [Book] {
@@ -43,49 +46,87 @@ struct SelectBookForQuoteSheetView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                if !readingNow.isEmpty {
-                    Section("Leyendo ahora") {
-                        ForEach(readingNow, id: \.id) { book in
-                            bookRow(book)
+        Group {
+            if filteredBooks.isEmpty {
+                emptyStateView
+            } else {
+                List {
+                    if !readingNow.isEmpty {
+                        Section("Leyendo ahora") {
+                            ForEach(readingNow, id: \.id) { book in
+                                bookRow(book)
+                            }
                         }
                     }
-                }
 
-                if !read.isEmpty {
-                    Section("Leídos") {
-                        ForEach(read, id: \.id) { book in
-                            bookRow(book)
+                    if !read.isEmpty {
+                        Section("Leídos") {
+                            ForEach(read, id: \.id) { book in
+                                bookRow(book)
+                            }
                         }
                     }
-                }
 
-                if !others.isEmpty {
-                    Section("Resto de la biblioteca") {
-                        ForEach(others, id: \.id) { book in
-                            bookRow(book)
+                    if !others.isEmpty {
+                        Section("Resto de la biblioteca") {
+                            ForEach(others, id: \.id) { book in
+                                bookRow(book)
+                            }
                         }
                     }
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .scrollDismissesKeyboard(.interactively)
             }
-            .navigationTitle("Seleccionar libro")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") {
-                        dismiss()
-                    }
-                }
-            }
-            .searchable(text: $searchText, prompt: "Buscar en tu biblioteca")
         }
+        .background(Color.theme.mainBackground)
+        .navigationTitle("Seleccionar libro")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cerrar") {
+                    onClose()
+                }
+                .accessibilityIdentifier("quote.bookPicker.close")
+            }
+        }
+        .searchable(text: $searchText, prompt: "Buscar en tu biblioteca")
+        .dismissKeyboardOnTapOutside()
+        .accessibilityIdentifier("quote.bookPicker.screen")
+        .onAppear {
+            NSLog("[Shelfmark][BookPicker] onAppear | books.count=%d", books.count)
+        }
+    }
+
+    @ViewBuilder
+    private var emptyStateView: some View {
+        let isSearching = !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+
+        VStack(spacing: 12) {
+            ContentUnavailableView(
+                isSearching ? "Sin resultados" : "Sin libros",
+                systemImage: isSearching ? "magnifyingglass" : "book.closed",
+                description: Text(
+                    isSearching
+                    ? "Prueba con otra búsqueda."
+                    : "Añade libros en Biblioteca para poder asociarlos a una cita."
+                )
+            )
+            if isSearching {
+                Button("Limpiar búsqueda") {
+                    searchText = ""
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func bookRow(_ book: Book) -> some View {
         Button {
             onSelect(book)
-            dismiss()
+            onClose()
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -105,6 +146,22 @@ struct SelectBookForQuoteSheetView: View {
                 }
             }
         }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.theme.secondaryBackground.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
+        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .accessibilityLabel(book.title)
+        .accessibilityIdentifier("quote.bookPicker.\(book.id.uuidString)")
     }
 }
 

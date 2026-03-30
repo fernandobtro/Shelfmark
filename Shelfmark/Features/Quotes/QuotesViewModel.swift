@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Quotes tab state and actions: paginated loading, grouping projections, deduplication, and delete handling.
+//
 
 import Foundation
 import Observation
 
+/// Coordinates quote/library reads and builds grouped, searchable quote projections.
 @Observable
 final class QuotesViewModel {
     enum State: Equatable {
@@ -26,7 +29,7 @@ final class QuotesViewModel {
     var grouping: Grouping = .byBook
     var searchText: String = ""
 
-    /// Libros cargados para resolver bookId → título/autor al agrupar y mostrar.
+    /// Loaded books used to resolve bookId into title/author metadata for grouping and rendering.
     private(set) var books: [Book] = []
 
     let pageSize = 20
@@ -48,7 +51,7 @@ final class QuotesViewModel {
         self.deleteQuoteUseCase = deleteQuoteUseCase
     }
 
-    /// Libera citas y libros en memoria cuando el usuario sale de la pestaña Citas.
+    /// Releases in-memory quotes and books when the user leaves the Quotes tab.
     func unload() {
         state = .idle
         books = []
@@ -75,7 +78,7 @@ final class QuotesViewModel {
             }
         } catch {
             await MainActor.run {
-                state = .error("No se pudieron cargar las citas: \(error.localizedDescription)")
+                state = .error(UserFacingError.message(error, fallback: "No se pudieron cargar las citas. Intenta de nuevo."))
             }
         }
     }
@@ -96,7 +99,7 @@ final class QuotesViewModel {
                 }
             }
         } catch {
-            // Mantenemos la lista actual; no mostramos error para no interrumpir
+            // Keep current list state; skip inline error to avoid navigation interruption.
         }
     }
 
@@ -106,7 +109,7 @@ final class QuotesViewModel {
             await loadQuotes()
         } catch {
             await MainActor.run {
-                state = .error("No se pudo eliminar la cita: \(error.localizedDescription)")
+                state = .error(UserFacingError.message(error, fallback: "No se pudo eliminar la cita. Intenta de nuevo."))
             }
         }
     }
@@ -115,7 +118,7 @@ final class QuotesViewModel {
         grouping = newGrouping
     }
 
-    /// Secciones para la lista: por libro (bookId) o por autor (nombre del primer autor).
+    /// List sections grouped by book (`bookId`) or by first-author name.
     var sectionedQuotes: [(key: String, quotes: [Quote])] {
         guard case .loaded(let quotes) = state else { return [] }
         let bookById = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
@@ -136,7 +139,7 @@ final class QuotesViewModel {
         }
     }
 
-    /// Secciones filtradas por búsqueda: por clave (libro/autor) y por texto de la cita.
+    /// Search-filtered sections by grouping key (book/author) and quote text.
     var filteredSectionedQuotes: [(key: String, quotes: [Quote])] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return sectionedQuotes }
@@ -154,7 +157,7 @@ final class QuotesViewModel {
         }
     }
 
-    /// Libros con citas (para vista "Por libro"): libro + número de citas. Respetan búsqueda.
+    /// Books with quote counts for the By Book view, honoring active search.
     var booksWithQuoteCount: [(Book, Int)] {
         guard case .loaded(let quotes) = state else { return [] }
         let bookById = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
@@ -179,26 +182,26 @@ final class QuotesViewModel {
         }.sorted { $0.0.title.localizedCaseInsensitiveCompare($1.0.title) == .orderedAscending }
     }
 
-    /// Autores con número de citas (para vista "Por autor"). Respetan búsqueda.
+    /// Authors with quote counts for the By Author view, honoring active search.
     var authorsWithQuoteCount: [(name: String, count: Int)] {
         guard grouping == .byAuthor else { return [] }
         return filteredSectionedQuotes.map { (name: $0.key, count: $0.quotes.count) }
     }
 
-    /// Citas de un libro (para navegación a lista por libro).
+    /// Quotes for a specific book, used by By Book navigation.
     func quotes(forBookId bookId: UUID) -> [Quote] {
         guard case .loaded(let quotes) = state else { return [] }
         return quotes.filter { $0.bookId == bookId }
     }
 
-    /// Citas de un autor (para navegación a lista por autor).
+    /// Quotes for a specific author, used by By Author navigation.
     func quotes(forAuthor authorName: String) -> [Quote] {
         let bookById = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
         guard case .loaded(let quotes) = state else { return [] }
         return quotes.filter { bookById[$0.bookId]?.authors.first?.name == authorName }
     }
 
-    /// Evita IDs duplicados de citas para no romper ForEach y mantiene orden por fecha descendente.
+    /// Removes duplicate quote IDs to keep `ForEach` identity stable and keeps descending date order.
     private func deduplicateQuotes(_ quotes: [Quote]) -> [Quote] {
         var seen: Set<UUID> = []
         let sorted = quotes.sorted { $0.createdAt > $1.createdAt }

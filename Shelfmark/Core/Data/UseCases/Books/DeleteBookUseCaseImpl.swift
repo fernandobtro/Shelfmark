@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Implements `DeleteBookUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `DeleteBookUseCase` using data repositories.
 final class DeleteBookUseCaseImpl: DeleteBookUseCaseProtocol {
     private let repository: BookRepositoryProtocol
     

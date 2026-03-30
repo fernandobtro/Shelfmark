@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 14/03/26.
 //
+//  Purpose: Profile state manager for display-name persistence and aggregated library/quotes/lists metrics.
+//
 
 import Foundation
 import Observation
 
+/// Loads profile data and computed counters for the Profile tab.
 @Observable
 final class ProfileViewModel {
     enum State: Equatable {
@@ -19,6 +22,7 @@ final class ProfileViewModel {
 
     var state: State = .idle
     var displayName: String = ""
+    var libraryGridLayoutOption: LibraryGridLayoutOption = .standard
 
     private let userProfileRepository: UserProfileRepositoryProtocol
     private let fetchLibraryUseCase: FetchLibraryUseCaseProtocol
@@ -37,7 +41,7 @@ final class ProfileViewModel {
         self.fetchReadingListsUseCase = fetchReadingListsUseCase
     }
 
-    /// Libera el estado cargado cuando el usuario sale de la pestaña Perfil.
+    /// Releases loaded state when the user leaves the Profile tab.
     func unload() {
         state = .idle
     }
@@ -46,6 +50,7 @@ final class ProfileViewModel {
         await MainActor.run {
             state = .loading
             displayName = userProfileRepository.getDisplayName()
+            libraryGridLayoutOption = userProfileRepository.getLibraryGridLayoutOption()
         }
 
         do {
@@ -70,5 +75,10 @@ final class ProfileViewModel {
     func saveDisplayName(_ name: String) {
         displayName = name
         userProfileRepository.setDisplayName(name)
+    }
+
+    func setLibraryGridLayoutOption(_ option: LibraryGridLayoutOption) {
+        libraryGridLayoutOption = option
+        userProfileRepository.setLibraryGridLayoutOption(option)
     }
 }

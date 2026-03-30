@@ -1,5 +1,8 @@
+//  Purpose: Library add-book action sheet that routes to ISBN scan or manual entry.
+//
 import SwiftUI
 
+/// Presents add-book entry options and returns user choice to the parent flow.
 struct AddBookOptionsSheetView: View {
     let onScanISBN: () -> Void
     let onAddManually: () -> Void
@@ -27,7 +30,8 @@ struct AddBookOptionsSheetView: View {
                         systemImage: "barcode.viewfinder",
                         title: "Escanear ISBN",
                         subtitle: "Usa la cámara para leer el código de barras",
-                        action: handleScanISBN
+                        action: handleScanISBN,
+                        accessibilityId: "library.addBook.scanISBN"
                     )
 
                     Divider()
@@ -36,7 +40,8 @@ struct AddBookOptionsSheetView: View {
                         systemImage: "square.and.pencil",
                         title: "Añadir manualmente",
                         subtitle: "Introduce los datos del libro a mano",
-                        action: handleAddManually
+                        action: handleAddManually,
+                        accessibilityId: "library.addBook.manual"
                     )
                 }
                 .background(
@@ -56,7 +61,8 @@ struct AddBookOptionsSheetView: View {
         systemImage: String,
         title: String,
         subtitle: String,
-        action: @escaping () -> Void
+        action: @escaping () -> Void,
+        accessibilityId: String
     ) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
@@ -80,6 +86,7 @@ struct AddBookOptionsSheetView: View {
             .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityId)
     }
 
     private func handleScanISBN() {

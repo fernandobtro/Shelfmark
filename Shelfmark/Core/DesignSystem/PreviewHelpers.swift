@@ -2,11 +2,14 @@
 //  PreviewHelpers.swift
 //  Shelfmark
 //
-//  Datos mock solo para Previews de SwiftUI. No usar en producción.
+//  Mock data used only for SwiftUI previews. Do not use in production.
+//
+//  Purpose: Preview-only mock factories and sample values used by SwiftUI previews.
 //
 
 import Foundation
 
+/// Provides deterministic preview data for visual development workflows.
 enum PreviewHelpers {
     static let previewAuthor1 = Author(id: UUID(), name: "J.R.R. Tolkien")
     static let previewAuthor2 = Author(id: UUID(), name: "Ursula K. Le Guin")

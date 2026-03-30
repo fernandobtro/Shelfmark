@@ -4,11 +4,16 @@
 //
 //  Created by Fernando Buenrostro on 05/03/26.
 //
+//  Purpose: Root tab shell that composes feature tabs, global sheets, and cross-feature refresh triggers.
+//
 
 import SwiftUI
 
+/// Hosts app-level tab navigation, modal flows, and dependency-wired feature entry points.
 struct RootView: View {
     let container: AppDIContainer
+    private let tabBarBottomPadding: CGFloat = 8
+    private let tabBarContentInset: CGFloat = 84
 
     @State private var libraryViewModel: LibraryViewModel
     @State private var listsViewModel: ListsViewModel
@@ -19,12 +24,16 @@ struct RootView: View {
     @State private var isPresentingScanner = false
     @State private var isPresentingAddBook = false
     @State private var showCreateListSheet = false
-    @State private var showAddEditQuoteSheet = false
+    @State private var quotesNavigationPath: [QuotesRoute] = []
+    @State private var showQuoteAddOptionsDialog = false
+    @State private var isPresentingQuoteTextScanner = false
+    @State private var quoteTextScannerViewModel: QuoteTextScannerViewModel?
+    @State private var pendingQuoteInitialText: String?
+    @State private var shouldOpenManualQuoteAfterScannerDismiss = false
     @State private var scannerViewModel: BookScannerViewModel?
     @State private var bookToAddFromScanner: Book?
     @State private var showNotFoundAlert = false
     @State private var refreshLibraryTrigger = 0
-    @State private var refreshQuotesTrigger = 0
     @State private var showLibraryStats = false
 
     init(container: AppDIContainer) {
@@ -36,13 +45,14 @@ struct RootView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack {
             Color.theme.mainBackground
                 .ignoresSafeArea()
 
             tabContent
-                .padding(.bottom, 80)
-
+                .padding(.bottom, tabBarContentInset)
+        }
+        .overlay(alignment: .bottom) {
             CustomTabBar(
                 selectedTab: $selectedTab,
                 onPlusButtonTap: {
@@ -52,13 +62,15 @@ struct RootView: View {
                     case .lists:
                         showCreateListSheet = true
                     case .quotes:
-                        showAddEditQuoteSheet = true
+                        showQuoteAddOptionsDialog = true
                     case .profile:
                         break
                     }
                 }
             )
+            .padding(.bottom, tabBarBottomPadding)
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .onChange(of: selectedTab) { oldTab, newTab in
             guard oldTab != newTab else { return }
             switch oldTab {
@@ -66,6 +78,9 @@ struct RootView: View {
             case .quotes: quotesViewModel.unload()
             case .lists: listsViewModel.unload()
             case .profile: profileViewModel.unload()
+            }
+            if newTab == .library {
+                libraryViewModel.refreshDisplayPreferences()
             }
         }
         .sheet(isPresented: $showAddOptionsDialog) {
@@ -131,22 +146,51 @@ struct RootView: View {
                 onDismiss: { showCreateListSheet = false }
             )
         }
-        .sheet(isPresented: $showAddEditQuoteSheet, onDismiss: {
-            refreshQuotesTrigger += 1
+        .sheet(isPresented: $isPresentingQuoteTextScanner, onDismiss: {
+            quoteTextScannerViewModel = nil
+            if let initialText = pendingQuoteInitialText {
+                pendingQuoteInitialText = nil
+                quotesNavigationPath.append(.addQuoteWithText(initialText))
+            } else if shouldOpenManualQuoteAfterScannerDismiss {
+                shouldOpenManualQuoteAfterScannerDismiss = false
+                quotesNavigationPath.append(.addQuote)
+            }
         }) {
-            AddEditQuoteView(
-                viewModel: container.makeAddEditQuoteViewModel(mode: AddEditQuoteMode.add),
-                onDelete: nil
-            )
+            if let vm = quoteTextScannerViewModel {
+                QuoteTextScannerView(
+                    viewModel: vm,
+                    onTextCaptured: { capturedText in
+                        pendingQuoteInitialText = capturedText
+                        isPresentingQuoteTextScanner = false
+                    },
+                    onFallbackToManual: {
+                        shouldOpenManualQuoteAfterScannerDismiss = true
+                        isPresentingQuoteTextScanner = false
+                    },
+                    onClose: {
+                        shouldOpenManualQuoteAfterScannerDismiss = false
+                        isPresentingQuoteTextScanner = false
+                    }
+                )
+            }
+        }
+        .confirmationDialog("Añadir cita", isPresented: $showQuoteAddOptionsDialog, titleVisibility: .visible) {
+            Button("Escanear texto") {
+                quoteTextScannerViewModel = container.makeQuoteTextScannerViewModel()
+                isPresentingQuoteTextScanner = true
+            }
+            .accessibilityIdentifier("quotes.addOption.scanText")
+            Button("Escribir manualmente") {
+                quotesNavigationPath.append(.addQuote)
+            }
+            .accessibilityIdentifier("quotes.addOption.manual")
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Elige cómo quieres crear tu cita.")
         }
         .task(id: refreshLibraryTrigger) {
             if refreshLibraryTrigger > 0 {
                 await libraryViewModel.loadLibrary()
-            }
-        }
-        .task(id: refreshQuotesTrigger) {
-            if refreshQuotesTrigger > 0 {
-                await quotesViewModel.loadQuotes()
             }
         }
     }
@@ -189,10 +233,25 @@ struct RootView: View {
             }
 
         case .quotes:
-            NavigationStack {
+            NavigationStack(path: $quotesNavigationPath) {
                 QuotesView(viewModel: quotesViewModel, container: container)
                 .navigationDestination(for: QuotesRoute.self) { route in
                     switch route {
+                    case .addQuote:
+                        AddEditQuoteView(
+                            viewModel: container.makeAddEditQuoteViewModel(mode: .add),
+                            onDelete: nil
+                        )
+                    case .addQuoteWithText(let text):
+                        AddEditQuoteView(
+                            viewModel: container.makeAddEditQuoteViewModel(mode: .addWithInitialText(text)),
+                            onDelete: nil
+                        )
+                    case .editQuote(let quoteId):
+                        AddEditQuoteView(
+                            viewModel: container.makeAddEditQuoteViewModel(mode: .edit(quoteId: quoteId)),
+                            onDelete: nil
+                        )
                     case .quoteDetail(let quoteId):
                         QuoteDetailView(
                             viewModel: container.makeQuoteDetailViewModel(quoteId: quoteId),
@@ -209,6 +268,10 @@ struct RootView: View {
                         )
                     }
                 }
+            }
+            .onChange(of: quotesNavigationPath.count) { old, new in
+                guard new < old else { return }
+                Task { await quotesViewModel.loadQuotes() }
             }
 
         case .profile:

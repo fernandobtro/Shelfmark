@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: SwiftData-backed repository implementation for quote persistence operations.
+//
 
 import Foundation
 import SwiftData
 
+/// Persists quote entities and maps them into domain quote models.
 class SwiftDataQuoteRepository: QuoteRepositoryProtocol {
     
     let modelContext: ModelContext

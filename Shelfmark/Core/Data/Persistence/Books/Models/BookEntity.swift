@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: SwiftData persistence component `BookEntity`.
+//
 
 import Foundation
 import SwiftData
 
+/// SwiftData persistence component `BookEntity`.
 @Model
 class BookEntity {
     @Attribute(.unique) var id: UUID
@@ -23,7 +26,7 @@ class BookEntity {
     var subtitle: String?
     var language: String
     var isFavorite: Bool
-    /// SwiftData no persiste enums; guardamos el rawValue del dominio (ReadingStatus).
+    /// SwiftData does not persist enums directly so store domain `ReadingStatus` raw value.
     var readingStatusRaw: String
     var currentPage: Int?
 

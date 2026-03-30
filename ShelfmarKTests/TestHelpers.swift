@@ -2,10 +2,13 @@
 //  TestHelpers.swift
 //  ShelfmarKTests
 //
+//  Purpose: Shelfmark component `TestHelpers`.
+//
 
 import Foundation
 @testable import Shelfmark
 
+/// Shelfmark component `TestHelpers`.
 enum TestError: Error, Equatable {
     case fake
 }

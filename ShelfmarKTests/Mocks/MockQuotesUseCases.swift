@@ -2,10 +2,13 @@
 //  MockQuotesUseCases.swift
 //  ShelfmarKTests
 //
+//  Purpose: Shelfmark component `MockQuotesUseCases`.
+//
 
 import Foundation
 @testable import Shelfmark
 
+/// Shelfmark component `MockQuotesUseCases`.
 final class MockFetchQuotesUseCase: FetchQuotesUseCaseProtocol {
     var quotesToReturn: [Quote] = []
     var errorToThrow: Error?

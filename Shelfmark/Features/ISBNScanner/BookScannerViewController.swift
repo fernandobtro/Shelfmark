@@ -4,16 +4,19 @@
 //
 //  Created by Fernando Buenrostro on 10/03/26.
 //
+//  Purpose: UIKit camera controller for barcode capture used by the SwiftUI scanner flow.
+//
 
 import Foundation
 import UIKit
 import VisionKit
 
+/// Bridges AVFoundation barcode detection callbacks into SwiftUI scanner features.
 final class BookScannerViewController: UIViewController {
     private var bookScanner: DataScannerViewController?
-    /// Closure que se llama cuando se detecta un código de barras. Quien presenta el VC asigna aquí qué hacer (p. ej. llamar al ViewModel).
+    /// Callback fired when a barcode is detected; presenter defines follow-up behavior (for example, calling the view model).
     var onCodeScanned: ((String) -> Void)?
-    /// Para no disparar el callback varias veces si el mismo código se reconoce en varios frames.
+    /// Prevents firing the callback repeatedly when the same code is recognized across multiple frames.
     private var hasReportedCode = false
     
     override func viewDidLoad() {

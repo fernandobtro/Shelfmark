@@ -2,10 +2,13 @@
 //  BookDomainRulesTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `BookDomainRulesTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `BookDomainRulesTests`.
 final class BookDomainRulesTests: XCTestCase {
 
     func test_readingProgressFraction_whenMissingData_returnsNil() {

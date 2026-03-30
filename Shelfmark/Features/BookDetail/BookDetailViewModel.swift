@@ -4,12 +4,15 @@
 //
 //  Created by Fernando Buenrostro on 05/03/26.
 //
+//  Purpose: Book detail state and actions, including quote loading, status updates, progress edits, and deletion.
+//
 
 import Foundation
 import Observation
 
-// MARK: - Estado de la pantalla (igual que en Library: un solo estado posible a la vez)
+// MARK: - Screen State (single active state at a time)
 
+/// Loads a single book aggregate and executes mutation flows with user-facing error handling.
 enum BookDetailState: Equatable {
     case idle
     case loading
@@ -20,9 +23,9 @@ enum BookDetailState: Equatable {
 @Observable
 final class BookDetailViewModel {
     var state: BookDetailState = .idle
-    /// Citas asociadas a este libro (se cargan junto con el detalle).
+    /// Quotes associated with this book, loaded together with detail data.
     var quotesForBook: [Quote] = []
-    /// Error al guardar cambios rápidos (favorito, estado, página).
+    /// Error surfaced when quick updates fail (favorite, reading status, current page).
     var quickSaveError: String?
 
     private let bookId: UUID
@@ -72,18 +75,20 @@ final class BookDetailViewModel {
             }
         } catch {
             await MainActor.run {
-                state = .error(error.localizedDescription)
+                state = .error(UserFacingError.message(error, fallback: "No se pudo cargar la ficha del libro. Intenta de nuevo."))
             }
         }
     }
 
-    func delete() async {
+    func delete() async -> Bool {
         do {
             try await deleteBookUseCase.execute(bookId: bookId)
+            return true
         } catch {
             await MainActor.run {
-                state = .error(error.localizedDescription)
+                state = .error(UserFacingError.message(error, fallback: "No se pudo eliminar el libro. Intenta de nuevo."))
             }
+            return false
         }
     }
 
@@ -149,7 +154,7 @@ final class BookDetailViewModel {
         await persistQuick(updated)
     }
 
-    /// Reinicia el progreso de lectura al inicio.
+    /// Resets reading progress back to the beginning.
     func resetProgress() async {
         guard case .loaded(let book) = state else { return }
         let updated = Book(
@@ -171,7 +176,7 @@ final class BookDetailViewModel {
         await persistQuick(updated)
     }
 
-    /// Devuelve el libro al estado "pendiente" y limpia su progreso actual.
+    /// Sets the book back to pending state and clears current progress.
     func markAsPending() async {
         guard case .loaded(let book) = state else { return }
         let updated = Book(
@@ -227,7 +232,7 @@ final class BookDetailViewModel {
             await loadDetail()
         } catch {
             await MainActor.run {
-                quickSaveError = error.localizedDescription
+                quickSaveError = UserFacingError.message(error, fallback: "No se pudieron guardar los cambios. Intenta de nuevo.")
             }
         }
     }

@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 12/03/26.
 //
+//  Purpose: Implements `LookUpByISBNUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `LookUpByISBNUseCase` using data repositories.
 final class LookUpByISBNUseCaseImpl: LookUpByISBNUseCaseProtocol {
     private let repository: BookLookUpByISBNRepositoryProtocol
     

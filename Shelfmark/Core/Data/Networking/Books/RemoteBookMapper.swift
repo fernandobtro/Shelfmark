@@ -4,11 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 06/03/26.
 //
+//  Purpose: Mapper that converts Google Books payloads into domain `Book` values.
+//
 
 import Foundation
-/*
- Aquí se hace el mapeo por si hay algo raro 
- */
+
+/// Transforms remote DTO metadata into normalized Shelfmark domain models.
 struct RemoteBookMapper {
     static func map(response: RemoteResponseDTO, isbn: String) -> Book? {
         guard let volumeInfo = response.items?.first?.volumeInfo else {
@@ -23,8 +24,8 @@ struct RemoteBookMapper {
             Publisher(id: UUID(), name: $0)
         }
         
-        // Google Books suele devolver thumbnails con esquema http:// que App Transport Security bloquea.
-        // Normalizamos a https:// para que AsyncImage pueda cargarlas sin excepciones en Info.plist.
+        // Google Books may return `http://` thumbnails blocked by App Transport Security.
+        // Normalize to `https://` so `AsyncImage` can load them without ATS exceptions.
         let thumbnailStringRaw = volumeInfo.imageLinks?.thumbnail ?? volumeInfo.imageLinks?.smallThumbnail
         let thumbnailString = thumbnailStringRaw.map { url -> String in
             if url.hasPrefix("http://") {
@@ -55,12 +56,12 @@ struct RemoteBookMapper {
         )
     }
     
-    /// Parsea el string de fecha de la API (p. ej. "2020", "2020-01", "2020-01-15") a Date.
+    /// Parses API date strings (for example `2020`, `2020-01`, `2020-01-15`) into `Date`.
     private static func parsePublicationDate(_ string: String?) -> Date? {
         guard let string = string?.trimmingCharacters(in: .whitespacesAndNewlines), !string.isEmpty else {
             return nil
         }
-        // La API puede devolver solo año, año-mes o año-mes-día
+        // API can return year-only, year-month, or full year-month-day values.
         let padded: String
         if string.count == 4 {
             padded = "\(string)-01-01"

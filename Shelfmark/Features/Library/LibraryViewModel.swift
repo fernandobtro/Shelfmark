@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Library tab state and actions: paginated loading, search/filter/sort/group transforms, and delete flows.
+//
 
 import Foundation
 import Observation
 
+/// Coordinates library fetching, pagination, and presentation-level grouping/filtering logic.
 enum LibraryState: Equatable {
     case idle
     case loading
@@ -21,7 +24,8 @@ final class LibraryViewModel {
     var sortOption: SortOption = .title
     var groupOption: GroupOption = .none
     var isShowingSortMenu: Bool = false
-    /// Filtro actual. `.none` significa "mostrar todos los libros".
+    var libraryGridLayoutOption: LibraryGridLayoutOption = .standard
+    /// Current filter: `.none` means show all books.
     var filterOption: FilterOption = .none
     var searchText: String = ""
     
@@ -87,13 +91,20 @@ final class LibraryViewModel {
 
     private let fetchLibraryUseCase: FetchLibraryUseCaseProtocol
     private let deleteBookUseCase: DeleteBookUseCaseProtocol
+    private let userProfileRepository: UserProfileRepositoryProtocol
 
-    init(fetchLibraryUseCase: FetchLibraryUseCaseProtocol, deleteBookUseCase: DeleteBookUseCaseProtocol) {
+    init(
+        fetchLibraryUseCase: FetchLibraryUseCaseProtocol,
+        deleteBookUseCase: DeleteBookUseCaseProtocol,
+        userProfileRepository: UserProfileRepositoryProtocol
+    ) {
         self.fetchLibraryUseCase = fetchLibraryUseCase
         self.deleteBookUseCase = deleteBookUseCase
+        self.userProfileRepository = userProfileRepository
+        self.libraryGridLayoutOption = userProfileRepository.getLibraryGridLayoutOption()
     }
 
-    /// Libera los datos en memoria cuando el usuario sale de la pestaña Biblioteca.
+    /// Releases in-memory data when the user leaves the Library tab.
     func unload() {
         state = .idle
         currentOffset = 0
@@ -116,7 +127,7 @@ final class LibraryViewModel {
             }
         } catch {
             await MainActor.run {
-                state = .error(error.localizedDescription)
+                state = .error(UserFacingError.message(error, fallback: "No se pudo cargar la biblioteca. Intenta de nuevo."))
             }
         }
     }
@@ -145,9 +156,7 @@ final class LibraryViewModel {
                 }
             }
         } catch {
-            await MainActor.run {
-                state = .error(error.localizedDescription)
-            }
+            // Keep current list state and avoid interrupting navigation on pagination failure.
         }
     }
     
@@ -157,7 +166,7 @@ final class LibraryViewModel {
             await loadLibrary()
         } catch {
             await MainActor.run {
-                state = .error(error.localizedDescription)
+                state = .error(UserFacingError.message(error, fallback: "No se pudo eliminar el libro. Intenta de nuevo."))
             }
         }
     }
@@ -172,6 +181,10 @@ final class LibraryViewModel {
 
     func selectFilter(_ option: FilterOption) {
         filterOption = option
+    }
+
+    func refreshDisplayPreferences() {
+        libraryGridLayoutOption = userProfileRepository.getLibraryGridLayoutOption()
     }
 
     // MARK: - Helper

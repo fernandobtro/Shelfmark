@@ -4,11 +4,14 @@
 //
 //  Created by Fernando Buenrostro on 15/03/26.
 //
+//  Purpose: Document scanner bridge used to capture/import custom book cover images.
+//
 
 import Foundation
 import VisionKit
 import SwiftUI
 
+/// Wraps camera/document scanning APIs for cover selection flow.
 struct CoverDocumentScanner: UIViewControllerRepresentable {
     typealias UIViewControllerType = VNDocumentCameraViewController
     

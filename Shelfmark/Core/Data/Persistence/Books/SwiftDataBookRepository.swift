@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: SwiftData-backed repository implementation for domain book reads and writes.
+//
 
 import Foundation
 import SwiftData
 
+/// Persists and queries book aggregates using SwiftData entities and mappers.
 class SwiftDataBookRepository: BookRepositoryProtocol {
     
     let modelContext: ModelContext
@@ -72,7 +75,7 @@ class SwiftDataBookRepository: BookRepositoryProtocol {
                 predicate: #Predicate<AuthorEntity> { $0.id == authorId }
             )
             if let existing = try modelContext.fetch(descriptor).first {
-                // Si cambió el nombre, lo actualizamos para mantener consistencia.
+                // If the name changed, update it to keep data consistent.
                 if existing.name != author.name {
                     existing.name = author.name
                 }

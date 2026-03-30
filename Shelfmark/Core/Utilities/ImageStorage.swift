@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 15/03/26.
 //
+//  Purpose: File-system image persistence helper for locally captured assets.
+//
 
 import Foundation
 import UIKit
 
+/// Stores, retrieves, and deletes local image files for book cover workflows.
 enum ImageStorageError: Error {
     case jpegDataFailed
     case writeFailed

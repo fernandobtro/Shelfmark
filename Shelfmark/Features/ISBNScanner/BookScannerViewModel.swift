@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 07/03/26.
 //
+//  Purpose: ISBN scanner state manager that performs lookup and exposes scan result states.
+//
 
 import Foundation
 import Observation
 
+/// Executes ISBN lookups and publishes scanner lifecycle transitions.
 enum ScannerState: Equatable {
     case idle
     case scanning
@@ -40,12 +43,12 @@ final class BookScannerViewModel {
             }
         } catch {
             await MainActor.run {
-                state = .error(error.localizedDescription)
+                state = .error(UserFacingError.message(error, fallback: "No se pudo completar el escaneo. Intenta de nuevo."))
             }
         }
     }
 
-    /// Para que la vista pueda volver a escanear tras notFound/error sin crear otro ViewModel.
+    /// Allows the view to restart scanning after not-found/error without recreating the view model.
     func reset() {
         state = .idle
     }

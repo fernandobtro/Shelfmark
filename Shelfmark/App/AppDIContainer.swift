@@ -4,123 +4,105 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Composition root for Shelfmark dependencies and view model factories.
+//
 
 import Foundation
 import SwiftData
 
+/// Composition root for Shelfmark dependencies and view model factories.
 final class AppDIContainer {
-    /// Contenedor principal de SwiftData para toda la app.
-    /// Se expone para poder integrarlo con SwiftUI (.modelContainer).
+    /// Main SwiftData container used across the app.
+    /// Exposed to integrate with SwiftUI via `.modelContainer`.
     let modelContainer: ModelContainer
 
-    /// Repositorio de libros basado en SwiftData.
+    /// SwiftData-backed repository for books.
     private lazy var bookRepository: BookRepositoryProtocol = {
         SwiftDataBookRepository(modelContext: modelContainer.mainContext)
     }()
     
-    /// List Repository based on SwiftData.
     private lazy var readingListRepository: ReadingListRepositoryProtocol = {
         SwiftDataReadingListRepository(modelContext: modelContainer.mainContext)
     }()
     
-    /// Quote Repository based on SwiftData
     private lazy var quoteRepository: QuoteRepositoryProtocol = {
         SwiftDataQuoteRepository(modelContext: modelContainer.mainContext)
     }()
 
-    /// User profile (display name, etc.) persisted in UserDefaults.
     private lazy var userProfileRepository: UserProfileRepositoryProtocol = {
         UserDefaultsUserProfileRepository()
     }()
 
-    /// Caso de uso: obtener toda la biblioteca.
     lazy var fetchLibraryUseCase: FetchLibraryUseCaseProtocol = {
         FetchLibraryUseCaseImpl(repository: bookRepository)
     }()
 
-    /// Caso de uso: obtener el detalle de un libro.
     lazy var fetchBookDetailUseCase: FetchBookDetailUseCaseProtocol = {
         FetchBookDetailUseCaseImpl(repository: bookRepository)
     }()
 
-    /// Caso de uso: guardar (crear/editar) un libro.
     lazy var saveBookUseCase: SaveBookUseCaseProtocol = {
         SaveBookUseCaseImpl(repository: bookRepository)
     }()
 
-    /// Caso de uso: eliminar un libro.
     lazy var deleteBookUseCase: DeleteBookUseCaseProtocol = {
         DeleteBookUseCaseImpl(repository: bookRepository)
     }()
     
-    /// Use Case: fetch Reading Lists
     lazy var fetchReadingListsUseCase: FetchReadingListUseCaseProtocol = {
         FetchReadingListUseCaseImpl(repository: readingListRepository)
     }()
     
-    /// Use Case: Create Reading List
     lazy var createReadingListUseCase: CreateReadingListUseCaseProtocol = {
         CreateReadingListUseCaseImpl(repository: readingListRepository)
     }()
 
-    /// Use Case: Rename Reading List
     lazy var renameReadingListUseCase: RenameReadingListUseCaseProtocol = {
         RenameReadingListUseCaseImpl(repository: readingListRepository)
     }()
 
-    /// Use Case: Delete Reading List
     lazy var deleteReadingListUseCase: DeleteReadingListUseCaseProtocol = {
         DeleteReadingListUseCaseImpl(repository: readingListRepository)
     }()
     
-    /// Use Case: Fetch Book in List
     lazy var fetchBookInListUseCase: FetchBooksInListUseCaseProtocol = {
         FetchBooksInListUseCaseImpl(repository: readingListRepository)
     }()
     
-    /// Use Case: Fetch Book in List by ID
     lazy var fetchReadingListByIdUseCase: FetchReadingListByIdUseCaseProtocol = {
         FetchReadingListByIdUseCaseImpl(repository: readingListRepository)
     }()
     
-    /// Use Case Add Book To Reading List
     lazy var addBookToReadingListUseCase: AddBookToReadingListUseCaseProtocol = {
         AddBookToReadingListImpl(repository: readingListRepository)
     }()
     
-    /// Use Case: Remove Book From Reading List
     lazy var removeBookFromReadingListUseCase: RemoveBookFromReadingListUseCaseProtocol = {
         RemoveBookFromReadingListUseCaseImpl(repository: readingListRepository)
     }()
     
-    /// Use Case: Fetch Quotes
     lazy var fetchQuotesUseCase: FetchQuotesUseCaseProtocol = {
         FetchQuotesUseCaseImpl(repository: quoteRepository)
     }()
     
-    /// Use Case: Fetch QuotesByID
     lazy var fetchQuoteByIdUseCase: FetchQuoteByIdUseCaseProtocol = {
         FetchQuoteByIdUseCaseImpl(repository: quoteRepository)
     }()
     
-    /// Use Case: Save Quote
     lazy var saveQuoteUseCase: SaveQuoteUseCaseProtocol = {
         SaveQuoteUseCaseImpl(repository: quoteRepository)
     }()
     
-    /// Use Case: Delete Quote
     lazy var deleteQuoteUseCase: DeleteQuoteUseCaseProtocol = {
         DeleteQuoteUseCaseImpl(repository: quoteRepository)
     }()
 
-    /// Use Case: métricas de lectura desde libros.
     lazy var calculateReadingStatsUseCase: CalculateReadingStatsUseCaseProtocol = {
         CalculateReadingStatsUseCaseImpl.shared
     }()
 
-    /// Use Case: reconocer texto en imagen (OCR para citas).
+    // MARK: - Networking
     
-    /// Para networking (lookup por ISBN)
     private lazy var remoteBookDataSource: RemoteBookDataSource = {
         RemoteBookDataSource(session: URLSession.shared, apiKey: AppSecrets.booksAPIKey)
     }()
@@ -180,7 +162,8 @@ extension AppDIContainer {
     func makeLibraryViewModel() -> LibraryViewModel {
         LibraryViewModel(
             fetchLibraryUseCase: fetchLibraryUseCase,
-            deleteBookUseCase: deleteBookUseCase
+            deleteBookUseCase: deleteBookUseCase,
+            userProfileRepository: userProfileRepository
         )
     }
 
@@ -258,6 +241,11 @@ extension AppDIContainer {
             fetchLibraryUseCase: fetchLibraryUseCase,
             deleteQuoteUseCase: deleteQuoteUseCase
         )
+    }
+
+    @MainActor
+    func makeQuoteTextScannerViewModel() -> QuoteTextScannerViewModel {
+        QuoteTextScannerViewModel()
     }
 
     @MainActor

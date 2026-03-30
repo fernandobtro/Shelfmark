@@ -2,12 +2,16 @@
 //  LibraryStatsView.swift
 //  Shelfmark
 //
+//  Purpose: Library statistics screen that presents aggregated reading metrics.
+//
 
 import SwiftUI
 import Observation
 
+/// Displays derived reading stats produced by `LibraryStatsViewModel`.
 struct LibraryStatsView: View {
     @Bindable var viewModel: LibraryStatsViewModel
+    @State private var retryTrigger = 0
 
     var body: some View {
         Group {
@@ -17,11 +21,17 @@ struct LibraryStatsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             case .error(let message):
-                ContentUnavailableView(
-                    "Error",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(message)
-                )
+                VStack(spacing: 12) {
+                    ContentUnavailableView(
+                        "Error",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(message)
+                    )
+                    Button("Reintentar") {
+                        retryTrigger += 1
+                    }
+                    .buttonStyle(.bordered)
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             case .loaded(let stats):
@@ -51,20 +61,31 @@ struct LibraryStatsView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.theme.secondaryBackground)
-                        )
+                        .padding(14)
+                        .background(cardBackground)
+                        .overlay(cardBorder)
                     }
-                    .padding()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
             }
         }
         .background(Color.theme.mainBackground)
         .navigationTitle("Estadísticas")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.load() }
+        .task(id: retryTrigger) {
+            await viewModel.load()
+        }
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(Color.theme.secondaryBackground.opacity(0.72))
+    }
+
+    private var cardBorder: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
     }
 }
 
@@ -81,10 +102,14 @@ private struct StatCard: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding()
+        .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.theme.secondaryBackground)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.theme.secondaryBackground.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
         )
     }
 }

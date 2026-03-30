@@ -4,11 +4,14 @@
 //
 //  Created by Fernando Buenrostro on 05/03/26.
 //
+//  Purpose: Book detail screen showing metadata, reading progress actions, and related quote entry points.
+//
 
 import SwiftUI
 import Observation
 import Kingfisher
 
+/// Renders detail state and dispatches edit/delete/progress actions to the view model.
 struct BookDetailView: View {
     @Bindable var viewModel: BookDetailViewModel
     @Environment(\.dismiss) private var dismiss
@@ -34,6 +37,7 @@ struct BookDetailView: View {
             }
         }
         .background(Color.theme.mainBackground)
+        .dismissKeyboardOnTapOutside()
         .navigationTitle("Ficha del libro")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -55,19 +59,23 @@ struct BookDetailView: View {
             container.makeAddEditBookView(mode: .edit(existing: book))
         }
         .sheet(item: $bookForNewQuote) { book in
-            AddEditQuoteView(
-                viewModel: container.makeAddEditQuoteViewModel(mode: .addForBook(book)),
-                onDelete: nil
-            )
+            NavigationStack {
+                AddEditQuoteView(
+                    viewModel: container.makeAddEditQuoteViewModel(mode: .addForBook(book)),
+                    onDelete: nil
+                )
+            }
         }
         .task(id: retryTrigger) {
             await viewModel.loadDetail()
         }
         .task(id: deleteTrigger) {
             if deleteTrigger > 0 {
-                await viewModel.delete()
+                let didDelete = await viewModel.delete()
                 await MainActor.run { isDeleting = false }
-                dismiss()
+                if didDelete {
+                    dismiss()
+                }
             }
         }
     }
@@ -118,9 +126,8 @@ struct BookDetailView: View {
                                 .font(.subheadline.weight(.medium))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background(
-                                    Capsule().fill(Color.theme.secondaryBackground)
-                                )
+                                .background(chipBackground)
+                                .overlay(chipBorder)
                         }
                         .buttonStyle(.plain)
 
@@ -135,9 +142,8 @@ struct BookDetailView: View {
                                 .font(.subheadline.weight(.medium))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background(
-                                    Capsule().fill(Color.theme.secondaryBackground)
-                                )
+                                .background(chipBackground)
+                                .overlay(chipBorder)
                         }
 
                         Button {
@@ -147,9 +153,8 @@ struct BookDetailView: View {
                                 .font(.subheadline.weight(.medium))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background(
-                                    Capsule().fill(Color.theme.secondaryBackground)
-                                )
+                                .background(chipBackground)
+                                .overlay(chipBorder)
                         }
                         .buttonStyle(.plain)
 
@@ -160,9 +165,8 @@ struct BookDetailView: View {
                                 .font(.subheadline.weight(.medium))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background(
-                                    Capsule().fill(Color.theme.secondaryBackground)
-                                )
+                                .background(chipBackground)
+                                .overlay(chipBorder)
                         }
                         .buttonStyle(.plain)
                     }
@@ -180,6 +184,7 @@ struct BookDetailView: View {
                                 .font(.body)
                                 .foregroundStyle(.secondary)
                         }
+                        .detailCard()
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -199,6 +204,7 @@ struct BookDetailView: View {
                             detailRow(title: "Idioma", value: book.language)
                         }
                     }
+                    .detailCard()
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Mi biblioteca")
@@ -211,6 +217,7 @@ struct BookDetailView: View {
                             }
                         }
                     }
+                    .detailCard()
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Progreso de lectura")
@@ -261,6 +268,7 @@ struct BookDetailView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    .detailCard()
 
                     if !viewModel.quotesForBook.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
@@ -288,6 +296,7 @@ struct BookDetailView: View {
                                     .font(.subheadline.weight(.semibold))
                             }
                         }
+                        .detailCard()
                     }
                 }
                 .padding(.horizontal)
@@ -349,21 +358,44 @@ struct BookDetailView: View {
         .font(.footnote)
     }
 
+    private var chipBackground: some View {
+        Capsule(style: .continuous)
+            .fill(Color.theme.secondaryBackground.opacity(0.72))
+    }
+
+    private var chipBorder: some View {
+        Capsule(style: .continuous)
+            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+    }
+
     private func errorView(message: String) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text(message)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+        VStack(spacing: 12) {
+            ContentUnavailableView(
+                "Error",
+                systemImage: "exclamationmark.triangle",
+                description: Text(message)
+            )
             Button("Reintentar") {
                 retryTrigger += 1
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.bordered)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+    }
+}
+
+private extension View {
+    func detailCard() -> some View {
+        self
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.theme.secondaryBackground.opacity(0.72))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+            )
     }
 }
 

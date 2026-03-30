@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 05/03/26.
 //
+//  Purpose: Book form state manager for add/edit/prefill modes, validation, normalization, and save execution.
+//
 
 import Foundation
 import Observation
 
+/// Transforms form input into a domain `Book` and persists through `SaveBookUseCaseProtocol`.
 enum AddEditBookMode {
     case add
     case addWithInitialData(Book)
@@ -16,37 +19,30 @@ enum AddEditBookMode {
 
 @Observable
 final class AddEditBookViewModel {
-    // Información principal
+   
     var title: String
     var subtitle: String
-
-    // Autores (texto separado por comas)
     var authorsText: String
-
-    // Detalles
     var isbn: String
     var publisherName: String
     var pagesText: String
     var publicationDate: Date?
     var language: String
-
-    // Notas
     var descriptionText: String
 
-    // Estado de la pantalla
+    // Screen state
     var isFavorite: Bool
     var readingStatus: ReadingStatus
-    /// Página en la que vas (opcional); vacío = sin registrar.
     var currentPageText: String
     var isSaving = false
     var errorMessage: String?
     
-    /// Portada actual (puede venir de la API o de una foto local).
+    /// Current cover image URL (from API metadata or local capture).
     var coverURL: URL?
 
     private let saveBookUseCase: SaveBookUseCaseProtocol
     private let mode: AddEditBookMode
-    /// Libro original (si venimos de escáner con datos iniciales o de editar), para no perder campos que no se editan en el formulario (como thumbnailURL).
+    /// Original book payload (scanner prefill or edit mode) to preserve non-form fields such as thumbnail URL.
     private let originalBook: Book?
 
     init(mode: AddEditBookMode, saveBookUseCase: SaveBookUseCaseProtocol) {
@@ -144,7 +140,7 @@ final class AddEditBookViewModel {
             }
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
+                errorMessage = UserFacingError.message(error, fallback: "No se pudo guardar el libro. Intenta de nuevo.")
                 isSaving = false
             }
         }

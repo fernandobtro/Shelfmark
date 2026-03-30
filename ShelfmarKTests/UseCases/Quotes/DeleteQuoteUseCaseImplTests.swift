@@ -2,10 +2,13 @@
 //  DeleteQuoteUseCaseImplTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `DeleteQuoteUseCaseImplTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `DeleteQuoteUseCaseImplTests`.
 @MainActor
 final class DeleteQuoteUseCaseImplTests: XCTestCase {
 

@@ -2,18 +2,21 @@
 //  BookScannerViewModelTests.swift
 //  ShelfmarKTests
 //
-//  Un test de ejemplo por categoría + comentarios con los que faltan y qué validar.
+//  Example test per category with guidance comments for additional coverage.
+//
+//  Purpose: Unit tests for `BookScannerViewModelTests`.
 //
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `BookScannerViewModelTests`.
 @MainActor
 final class BookScannerViewModelTests: XCTestCase {
 
-    // MARK: - Ejemplo implementado
+    // MARK: - Implemented Example
 
-    /// Cuando el use case devuelve un libro, el estado pasa a .loading y luego a .found(book).
+    /// When the use case returns a book, state moves to `.loading` and then `.found(book)`.
     func test_handleScannedCode_cuandoUseCaseDevuelveLibro_estadoPasaAFound() async {
         let mockUseCase = MockLookUpByISBNUseCase()
         let book = Book(
@@ -41,13 +44,13 @@ final class BookScannerViewModelTests: XCTestCase {
         if case .found(let foundBook) = sut.state {
             XCTAssertEqual(foundBook, book)
         } else {
-            XCTFail("Se esperaba state == .found(book), se obtuvo \(sut.state)")
+            XCTFail("Expected state == .found(book), got \(sut.state)")
         }
         XCTAssertEqual(mockUseCase.executeCallCount, 1)
         XCTAssertEqual(mockUseCase.lastISBNReceived, "978-111")
     }
 
-    // MARK: - Más casos
+    // MARK: - Additional Cases
 
     func test_handleScannedCode_cuandoUseCaseDevuelveNil_estadoPasaANotFound() async {
         let mockUseCase = MockLookUpByISBNUseCase()
@@ -60,7 +63,7 @@ final class BookScannerViewModelTests: XCTestCase {
         if case .notFound(let isbn) = sut.state {
             XCTAssertEqual(isbn, "123")
         } else {
-            XCTFail("Se esperaba state == .notFound(isbn:), se obtuvo \(sut.state)")
+            XCTFail("Expected state == .notFound(isbn:), got \(sut.state)")
         }
         XCTAssertEqual(mockUseCase.executeCallCount, 1)
         XCTAssertEqual(mockUseCase.lastISBNReceived, "123")
@@ -77,7 +80,7 @@ final class BookScannerViewModelTests: XCTestCase {
         if case .error(let message) = sut.state {
             XCTAssertFalse(message.isEmpty)
         } else {
-            XCTFail("Se esperaba state == .error, se obtuvo \(sut.state)")
+            XCTFail("Expected state == .error, got \(sut.state)")
         }
         XCTAssertEqual(mockUseCase.executeCallCount, 1)
         XCTAssertEqual(mockUseCase.lastISBNReceived, "123")

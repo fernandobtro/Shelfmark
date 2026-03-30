@@ -4,11 +4,14 @@
 //
 //  Created by Fernando Buenrostro on 07/03/26.
 //
+//  Purpose: ISBN scanner screen that captures barcodes and reports lookup states.
+//
 
 import Foundation
 import SwiftUI
 import Observation
 
+/// Presents camera scanner UI and binds to `BookScannerViewModel` state.
 struct BookScannerRepresentable: UIViewControllerRepresentable {
     let onCodeScanned: (String) -> Void
     
@@ -46,6 +49,29 @@ struct BookScannerView: View {
                         .padding()
                         .background(.ultraThinMaterial)
                         .cornerRadius(10)
+                }
+            }
+
+            if case .error(let message) = viewModel.state {
+                ZStack {
+                    Color.black.opacity(0.5)
+                        .ignoresSafeArea()
+                    VStack(spacing: 12) {
+                        ContentUnavailableView(
+                            "Error al escanear",
+                            systemImage: "exclamationmark.triangle",
+                            description: Text(message)
+                        )
+                        Button("Reintentar escaneo") {
+                            viewModel.reset()
+                            lastScannedCode = nil
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(14)
+                    .padding(24)
                 }
             }
         }

@@ -4,12 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 06/03/26.
 //
+//  Purpose: Repository adapter bridging remote ISBN data source to domain lookup contract.
+//
 
 import Foundation
-/*
- Aquí se implementa el protocolo se conecta DATA CON DOMAIN
- */
 
+/// Implements book lookup repository reads using remote Google Books responses.
 final class RemoteBookLookUpRepository: BookLookUpByISBNRepositoryProtocol {
     
     private let dataSource: RemoteBookDataSource

@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Reading lists screen with CRUD actions, pagination, and navigation into list/book detail routes.
+//
 
 import SwiftUI
 import Observation
 
+/// Displays list collections, row actions, and validation/error feedback for list management.
 struct ListsView: View {
     @Bindable var viewModel: ListsViewModel
     @State private var selectedList: ReadingList?
@@ -42,6 +45,9 @@ struct ListsView: View {
                                         previewCoverURLs: viewModel.previewCoversByList[list.id] ?? []
                                     )
                                 }
+                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button("Renombrar") {
                                         selectedList = list
@@ -81,16 +87,23 @@ struct ListsView: View {
                                         ProgressView()
                                             .frame(maxWidth: .infinity)
                                             .padding()
+                                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                            .listRowBackground(Color.clear)
+                                            .listRowSeparator(.hidden)
                                     } else {
                                         Color.clear
                                             .frame(height: 1)
+                                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                            .listRowBackground(Color.clear)
+                                            .listRowSeparator(.hidden)
                                             .task { await viewModel.loadNextPage() }
                                     }
                                 }
                             }
                         }
                     }
-                    .listStyle(.insetGrouped)
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
 
             case .error(let message):
@@ -115,6 +128,7 @@ struct ListsView: View {
         }
         .alert("Renombrar lista", isPresented: $showRenameAlert) {
             TextField("Nombre", text: $renameText)
+                .accessibilityIdentifier("lists.rename.nameField")
             Button("Cancelar", role: .cancel) {
                 selectedList = nil
             }
@@ -125,6 +139,7 @@ struct ListsView: View {
                     selectedList = nil
                 }
             }
+            .accessibilityIdentifier("lists.rename.confirmButton")
         } message: {
             Text("Elige un nombre para tu lista.")
         }
@@ -139,6 +154,7 @@ struct ListsView: View {
                     selectedList = nil
                 }
             }
+            .accessibilityIdentifier("lists.delete.confirmButton")
         } message: {
             Text("Esta acción no se puede deshacer.")
         }

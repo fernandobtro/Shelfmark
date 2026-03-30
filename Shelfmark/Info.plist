@@ -4,7 +4,5 @@
 <dict>
 	<key>BooksAPIKey</key>
 	<string>$(BOOKS_API_KEY)</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Shelfmark usa la cámara para escanear texto de libros y guardar citas.</string>
 </dict>
 </plist>

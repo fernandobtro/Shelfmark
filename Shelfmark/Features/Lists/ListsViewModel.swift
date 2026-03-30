@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Reading lists state manager: fetch/create/rename/delete plus derived counters and cover previews.
+//
 
 import Foundation
 import Observation
 
+/// Owns list lifecycle operations and derived UI data for the Lists tab.
 @Observable
 final class ListsViewModel {
 
@@ -21,7 +24,7 @@ final class ListsViewModel {
     var state: State = .idle
     var newListName: String = ""
     var isPresentingCreateSheet: Bool = false
-    /// Error de validación para formularios de listas (crear/renombrar).
+    /// Validation error shown by list forms (create/rename).
     var inputErrorMessage: String?
 
     let pageSize = 20
@@ -54,7 +57,7 @@ final class ListsViewModel {
         self.deleteReadingListUseCase = deleteReadingListUseCase
     }
 
-    /// Libera las listas en memoria cuando el usuario sale de la pestaña Listas.
+    /// Releases in-memory list state when the user leaves the Lists tab.
     func unload() {
         state = .idle
         currentOffset = 0
@@ -81,7 +84,7 @@ final class ListsViewModel {
             await enrichMetadata(for: lists)
         } catch {
             await MainActor.run {
-                state = .error("No se pudieron cargar las listas: \(error.localizedDescription)")
+                state = .error(UserFacingError.message(error, fallback: "No se pudieron cargar las listas. Intenta de nuevo."))
             }
         }
     }
@@ -102,7 +105,7 @@ final class ListsViewModel {
             }
             await enrichMetadata(for: newPage)
         } catch {
-            // Mantenemos la lista actual
+            // Keep current list state
         }
     }
 
@@ -123,8 +126,7 @@ final class ListsViewModel {
             await loadLists()
         } catch {
             await MainActor.run {
-                inputErrorMessage = "No se pudo crear la lista. Intenta de nuevo."
-                state = .error("Error al crear la lista: \(error.localizedDescription)")
+                inputErrorMessage = UserFacingError.message(error, fallback: "No se pudo crear la lista. Intenta de nuevo.")
             }
         }
     }
@@ -141,8 +143,7 @@ final class ListsViewModel {
             await loadLists()
         } catch {
             await MainActor.run {
-                inputErrorMessage = "No se pudo renombrar la lista. Intenta de nuevo."
-                state = .error("Error al renombrar la lista: \(error.localizedDescription)")
+                inputErrorMessage = UserFacingError.message(error, fallback: "No se pudo renombrar la lista. Intenta de nuevo.")
             }
         }
     }
@@ -154,12 +155,12 @@ final class ListsViewModel {
             await loadLists()
         } catch {
             await MainActor.run {
-                state = .error("Error al eliminar la lista: \(error.localizedDescription)")
+                inputErrorMessage = UserFacingError.message(error, fallback: "No se pudo eliminar la lista. Intenta de nuevo.")
             }
         }
     }
 
-    // MARK: - Metadatos (conteo y portadas)
+    // MARK: - Metadata
 
     private func enrichMetadata(for lists: [ReadingList]) async {
         var counts = await MainActor.run { booksCountByList }

@@ -4,18 +4,21 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Quotes tab screen with by-book/by-author grouping, search, and paginated navigation entry points.
+//
 
 import SwiftUI
 import Observation
 
+/// Presents grouped quote collections and drives pagination/retry interactions.
 struct QuotesView: View {
     @Bindable var viewModel: QuotesViewModel
     let container: AppDIContainer
     @State private var retryTrigger = 0
 
     private let gridColumns = [GridItem(.adaptive(minimum: 140), spacing: 16)]
-    private let emptySearchMessage = "Ningún resultado"
-    private let emptySearchSuggestion = "Prueba con otro término."
+    private let emptySearchMessage = "Sin resultados"
+    private let emptySearchSuggestion = "Prueba con otra búsqueda."
     private let emptyQuotesMessage = "Sin citas"
     private let emptyQuotesSuggestion = "Añade citas con el botón +."
 
@@ -48,15 +51,20 @@ struct QuotesView: View {
         .navigationTitle("Citas")
         .searchable(text: $viewModel.searchText, prompt: "Buscar por libro, autor o texto")
         .safeAreaInset(edge: .top, spacing: 0) {
-            Picker("Agrupar", selection: Binding(
-                get: { viewModel.grouping },
-                set: { viewModel.setGrouping($0) }
-            )) {
-                Text("Por libro").tag(QuotesViewModel.Grouping.byBook)
-                Text("Por autor").tag(QuotesViewModel.Grouping.byAuthor)
+            VStack(spacing: 0) {
+                Picker("Agrupar", selection: Binding(
+                    get: { viewModel.grouping },
+                    set: { viewModel.setGrouping($0) }
+                )) {
+                    Text("Por libro").tag(QuotesViewModel.Grouping.byBook)
+                    Text("Por autor").tag(QuotesViewModel.Grouping.byAuthor)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 10)
             }
-            .pickerStyle(.segmented)
-            .padding()
+            .background(Color.theme.mainBackground.opacity(0.95))
         }
         .dismissKeyboardOnTapOutside()
         .task(id: retryTrigger) {
@@ -98,7 +106,8 @@ struct QuotesView: View {
                     }
                     paginationTrigger
                 }
-                .padding()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
             .scrollDismissesKeyboard(.interactively)
         }
@@ -128,11 +137,25 @@ struct QuotesView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(Color.theme.secondaryBackground.opacity(0.72))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                        )
                     }
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
                 paginationSection
             }
-            .listStyle(.insetGrouped)
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
         }
     }
@@ -160,11 +183,15 @@ struct QuotesView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                         .padding()
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 } else {
                     Color.clear
                         .frame(height: 1)
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                         .task { await viewModel.loadNextPage() }
                 }
             }

@@ -2,10 +2,13 @@
 //  FetchReadingListByIdUseCaseImplTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `FetchReadingListByIdUseCaseImplTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `FetchReadingListByIdUseCaseImplTests`.
 @MainActor
 final class FetchReadingListByIdUseCaseImplTests: XCTestCase {
 

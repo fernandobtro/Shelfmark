@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: SwiftData persistence component `QuotePersistenceMapper`.
+//
 
 import Foundation
 
+/// SwiftData persistence component `QuotePersistenceMapper`.
 enum QuotePersistenceMapper {
     nonisolated static func toDomain(_ entity: QuoteEntity) -> Quote {
         Quote(id: entity.id, text: entity.text, bookId: entity.bookId, pageReference: entity.pageReference, createdAt: entity.createdAt)

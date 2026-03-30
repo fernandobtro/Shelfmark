@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Implements `FetchBookDetailUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `FetchBookDetailUseCase` using data repositories.
 final class FetchBookDetailUseCaseImpl: FetchBookDetailUseCaseProtocol {
     private let repository: BookRepositoryProtocol
     

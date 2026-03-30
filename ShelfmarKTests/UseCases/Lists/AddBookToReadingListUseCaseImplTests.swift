@@ -2,10 +2,13 @@
 //  AddBookToReadingListUseCaseImplTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `AddBookToReadingListUseCaseImplTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `AddBookToReadingListUseCaseImplTests`.
 final class AddBookToReadingListUseCaseImplTests: XCTestCase {
 
     func test_execute_callsRepositoryWithBookIdAndListId() async throws {

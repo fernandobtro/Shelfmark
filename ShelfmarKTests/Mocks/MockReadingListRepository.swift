@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Shelfmark component `MockReadingListRepository`.
+//
 
 import Foundation
 @testable import Shelfmark
 
+/// Shelfmark component `MockReadingListRepository`.
 final class MockReadingListRepository: ReadingListRepositoryProtocol {
     // MARK: - Configurable results
 

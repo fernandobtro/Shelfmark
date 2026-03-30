@@ -2,9 +2,12 @@
 //  DeleteReadingListUseCaseImpl.swift
 //  Shelfmark
 //
+//  Purpose: Implements `DeleteReadingListUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `DeleteReadingListUseCase` using data repositories.
 final class DeleteReadingListUseCaseImpl: DeleteReadingListUseCaseProtocol {
     private let repository: ReadingListRepositoryProtocol
 

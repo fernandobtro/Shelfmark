@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: SwiftData-backed repository implementation for reading list data and membership.
+//
 
 import Foundation
 import SwiftData
 
+/// Persists lists and list-item links, then maps them into domain list models.
 class SwiftDataReadingListRepository: ReadingListRepositoryProtocol {
     
     let modelContext: ModelContext
@@ -67,18 +70,18 @@ class SwiftDataReadingListRepository: ReadingListRepositoryProtocol {
         let lists = try modelContext.fetch(descriptor)
         guard let list = lists.first else { return [] }
 
-        // Tomamos los BookEntity asociados a los items de la lista
+        // Read `BookEntity` values associated with list items.
         let books = list.items.compactMap { $0.book }
         return books.map(BookPersistenceMapper.toDomain)
     }
     
     func addBook(_ bookId: UUID, toList listId: UUID) async throws {
-        // Buscar la lista
+        // Fetch list entity
         let listPredicate = #Predicate<ReadingListEntity> { $0.id == listId }
         let listDescriptor = FetchDescriptor<ReadingListEntity>(predicate: listPredicate)
         guard let list = try modelContext.fetch(listDescriptor).first else { return }
 
-        // Buscar el libro
+        // Fetch book entity
         let bookPredicate = #Predicate<BookEntity> { $0.id == bookId }
         let bookDescriptor = FetchDescriptor<BookEntity>(predicate: bookPredicate)
         guard let book = try modelContext.fetch(bookDescriptor).first else { return }
@@ -98,7 +101,7 @@ class SwiftDataReadingListRepository: ReadingListRepositoryProtocol {
         let listDescriptor = FetchDescriptor<ReadingListEntity>(predicate: listPredicate)
         guard let list = try modelContext.fetch(listDescriptor).first else { return }
 
-        // Buscar el item correspondiente a ese libro dentro de la lista
+        // Fetch list item for that book inside the list
         if let item = list.items.first(where: { $0.book?.id == bookId }) {
             modelContext.delete(item)
             try modelContext.save()

@@ -2,10 +2,13 @@
 //  MockQuoteRepository.swift
 //  ShelfmarKTests
 //
+//  Purpose: Shelfmark component `MockQuoteRepository`.
+//
 
 import Foundation
 @testable import Shelfmark
 
+/// Shelfmark component `MockQuoteRepository`.
 final class MockQuoteRepository: QuoteRepositoryProtocol {
     var fetchAllResult: [Quote] = []
     var fetchByIdResult: Quote?

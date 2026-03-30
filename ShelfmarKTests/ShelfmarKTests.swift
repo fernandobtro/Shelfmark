@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 12/03/26.
 //
+//  Purpose: Unit tests for `ShelfmarKTests`.
+//
 
 import XCTest
 
+/// Unit tests for `ShelfmarKTests`.
 final class ShelfmarKTests: XCTestCase {
 
     override func setUpWithError() throws {

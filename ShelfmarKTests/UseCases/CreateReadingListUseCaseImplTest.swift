@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Shelfmark component `CreateReadingListUseCaseImplTest`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Shelfmark component `CreateReadingListUseCaseImplTest`.
 @MainActor
 final class CreateReadingListUseCaseImplTest: XCTestCase {
 

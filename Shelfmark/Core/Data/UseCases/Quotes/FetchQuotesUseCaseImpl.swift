@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Implements `FetchQuotesUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `FetchQuotesUseCase` using data repositories.
 final class FetchQuotesUseCaseImpl: FetchQuotesUseCaseProtocol {
     
     private let repository: QuoteRepositoryProtocol

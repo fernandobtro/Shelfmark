@@ -2,10 +2,13 @@
 //  ListsViewModelTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `ListsViewModelTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `ListsViewModelTests`.
 @MainActor
 final class ListsViewModelTests: XCTestCase {
 
@@ -116,7 +119,7 @@ final class ListsViewModelTests: XCTestCase {
         XCTAssertEqual(createMock.executeCallCount, 0)
     }
 
-    func test_createList_whenCreateUseCaseThrows_stateIsError() async {
+    func test_createList_whenCreateUseCaseThrows_setsInputErrorMessage() async {
         let fetchMock = MockFetchReadingListUseCase()
         let createMock = MockCreateReadingListUseCase()
         createMock.errorToThrow = TestError.fake
@@ -135,12 +138,9 @@ final class ListsViewModelTests: XCTestCase {
 
         await sut.createList()
 
-        if case .error(let message) = sut.state {
-            XCTAssertFalse(message.isEmpty)
-            XCTAssertTrue(message.contains("Error al crear"))
-        } else {
-            XCTFail("Expected .error, got \(sut.state)")
-        }
+        XCTAssertEqual(sut.state, .idle)
+        XCTAssertNotNil(sut.inputErrorMessage)
+        XCTAssertTrue((sut.inputErrorMessage ?? "").contains("No se pudo crear"))
         XCTAssertEqual(createMock.executeCallCount, 1)
     }
 
@@ -190,7 +190,7 @@ final class ListsViewModelTests: XCTestCase {
         XCTAssertEqual(fetchMock.executeCallCount, 0)
     }
 
-    func test_renameList_whenUseCaseThrows_setsErrorState() async {
+    func test_renameList_whenUseCaseThrows_setsInputErrorMessage() async {
         let fetchMock = MockFetchReadingListUseCase()
         let createMock = MockCreateReadingListUseCase()
         let fetchBooksMock = MockFetchBooksInListUseCase()
@@ -208,11 +208,9 @@ final class ListsViewModelTests: XCTestCase {
 
         await sut.renameList(id: UUID(), newName: "Renombrada")
 
-        if case .error(let message) = sut.state {
-            XCTAssertTrue(message.contains("Error al renombrar"))
-        } else {
-            XCTFail("Expected .error, got \(sut.state)")
-        }
+        XCTAssertEqual(sut.state, .idle)
+        XCTAssertNotNil(sut.inputErrorMessage)
+        XCTAssertTrue((sut.inputErrorMessage ?? "").contains("No se pudo renombrar"))
         XCTAssertEqual(renameMock.executeCallCount, 1)
     }
 
@@ -240,7 +238,7 @@ final class ListsViewModelTests: XCTestCase {
         XCTAssertEqual(fetchMock.executeCallCount, 1)
     }
 
-    func test_deleteList_whenUseCaseThrows_setsErrorState() async {
+    func test_deleteList_whenUseCaseThrows_setsInputErrorMessage() async {
         let fetchMock = MockFetchReadingListUseCase()
         let createMock = MockCreateReadingListUseCase()
         let fetchBooksMock = MockFetchBooksInListUseCase()
@@ -258,11 +256,9 @@ final class ListsViewModelTests: XCTestCase {
 
         await sut.deleteList(id: UUID())
 
-        if case .error(let message) = sut.state {
-            XCTAssertTrue(message.contains("Error al eliminar"))
-        } else {
-            XCTFail("Expected .error, got \(sut.state)")
-        }
+        XCTAssertEqual(sut.state, .idle)
+        XCTAssertNotNil(sut.inputErrorMessage)
+        XCTAssertTrue((sut.inputErrorMessage ?? "").contains("No se pudo eliminar"))
         XCTAssertEqual(deleteMock.executeCallCount, 1)
     }
 

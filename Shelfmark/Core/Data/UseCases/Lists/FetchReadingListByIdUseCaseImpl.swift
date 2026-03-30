@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Implements `FetchReadingListByIdUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `FetchReadingListByIdUseCase` using data repositories.
 final class FetchReadingListByIdUseCaseImpl: FetchReadingListByIdUseCaseProtocol {
     private let repository: ReadingListRepositoryProtocol
     

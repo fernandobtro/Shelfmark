@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Implements `FetchLibraryUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `FetchLibraryUseCase` using data repositories.
 final class FetchLibraryUseCaseImpl: FetchLibraryUseCaseProtocol {
 
     private let repository: BookRepositoryProtocol

@@ -1,10 +1,13 @@
+//  Purpose: Reading list row view with cover mosaic preview, title, and item count badge.
+//
 import SwiftUI
 
+/// Renders one list card with summary metadata and preview covers.
 struct ReadingListCellView: View {
     let list: ReadingList
-    /// Número de libros en la lista, proporcionado por el ViewModel.
+    /// Number of books in the list, provided by the view model.
     let booksCount: Int
-    /// URLs de portada de ejemplo (hasta 4). Puede venir vacío.
+    /// Sample cover URLs (up to 4). Can be empty.
     let previewCoverURLs: [URL]
 
     private var formattedDate: String {
@@ -13,7 +16,7 @@ struct ReadingListCellView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Mini mosaico de portadas o icono de placeholder
+            // Mini cover mosaic or placeholder icon
             ZStack {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(Color.theme.secondaryBackground)
@@ -25,7 +28,7 @@ struct ReadingListCellView: View {
                         .foregroundStyle(.primaryGreen)
                 } else {
                     let covers = Array(previewCoverURLs.prefix(4))
-                    // Grid 2x2 de miniaturas
+                    // 2x2 thumbnail grid
                     VStack(spacing: 2) {
                         HStack(spacing: 2) {
                             coverThumbnail(for: indexOrNil(covers, 0))
@@ -54,7 +57,7 @@ struct ReadingListCellView: View {
 
             Spacer()
 
-            // Badge con contador de libros
+            // Badge showing book count
             if booksCount > 0 {
                 Text("\(booksCount)")
                     .font(.caption.weight(.semibold))
@@ -66,6 +69,16 @@ struct ReadingListCellView: View {
                     )
             }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.theme.secondaryBackground.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
         .contentShape(Rectangle())
     }
 
@@ -76,8 +89,8 @@ struct ReadingListCellView: View {
                 .fill(Color.theme.mainBackground.opacity(0.6))
 
             if let url {
-                // Usamos AsyncImage aquí para evitar acoplar Kingfisher a esta celda;
-                // la carga optimizada ya está en LibraryCellView.
+                // `AsyncImage` keeps this cell independent from Kingfisher.
+                // Optimized image loading is already handled in `LibraryCellView`.
                 AsyncImage(url: url) { image in
                     image
                         .resizable()

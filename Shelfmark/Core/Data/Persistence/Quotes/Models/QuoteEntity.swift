@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: SwiftData persistence component `QuoteEntity`.
+//
 
 import Foundation
 import SwiftData
 
+/// SwiftData persistence component `QuoteEntity`.
 @Model
 class QuoteEntity {
     @Attribute(.unique) var id: UUID

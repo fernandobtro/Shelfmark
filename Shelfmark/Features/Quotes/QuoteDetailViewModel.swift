@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Quote detail state manager for quote/book loading and destructive actions.
+//
 
 import Foundation
 import Observation
 
+/// Loads quote detail, resolves linked book data, and handles deletion flow.
 @Observable
 final class QuoteDetailViewModel {
     enum State: Equatable {

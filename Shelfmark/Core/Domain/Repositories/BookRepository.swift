@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Repository boundary `BookRepository`.
+//
 
 import Foundation
 
+/// Repository boundary `BookRepository`.
 protocol BookRepositoryProtocol {
     func save(_ book: Book) async throws
     func fetchAll() async throws -> [Book]

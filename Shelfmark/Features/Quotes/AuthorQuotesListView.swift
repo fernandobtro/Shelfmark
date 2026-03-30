@@ -4,11 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: List screen showing quotes grouped under a selected author.
+//
 
 import SwiftUI
 import Observation
 
-/// Lista de citas de un autor; se navega desde la vista "Por autor".
+/// Displays author-scoped quote results and supports navigation to quote detail.
 struct AuthorQuotesListView: View {
     let authorName: String
     @Bindable var viewModel: QuotesViewModel
@@ -43,7 +45,20 @@ struct AuthorQuotesListView: View {
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(Color.theme.secondaryBackground.opacity(0.72))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                            )
                         }
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                         .contextMenu {
                             Button("Eliminar", role: .destructive) {
                                 pendingDeleteQuoteId = quote.id
@@ -52,7 +67,8 @@ struct AuthorQuotesListView: View {
                         }
                     }
                 }
-                .listStyle(.insetGrouped)
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
         .background(Color.theme.mainBackground)

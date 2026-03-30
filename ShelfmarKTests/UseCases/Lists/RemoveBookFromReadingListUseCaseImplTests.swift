@@ -2,10 +2,13 @@
 //  RemoveBookFromReadingListUseCaseImplTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `RemoveBookFromReadingListUseCaseImplTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `RemoveBookFromReadingListUseCaseImplTests`.
 @MainActor
 final class RemoveBookFromReadingListUseCaseImplTests: XCTestCase {
 

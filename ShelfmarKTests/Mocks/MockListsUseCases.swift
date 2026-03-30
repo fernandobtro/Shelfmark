@@ -2,10 +2,13 @@
 //  MockListsUseCases.swift
 //  ShelfmarKTests
 //
+//  Purpose: Shelfmark component `MockListsUseCases`.
+//
 
 import Foundation
 @testable import Shelfmark
 
+/// Shelfmark component `MockListsUseCases`.
 final class MockFetchReadingListUseCase: FetchReadingListUseCaseProtocol {
     var listsToReturn: [ReadingList] = []
     var errorToThrow: Error?

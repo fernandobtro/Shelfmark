@@ -2,10 +2,13 @@
 //  CalculateReadingStatsUseCaseImplTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `CalculateReadingStatsUseCaseImplTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `CalculateReadingStatsUseCaseImplTests`.
 final class CalculateReadingStatsUseCaseImplTests: XCTestCase {
 
     func test_execute_whenNoBooks_returnsZeroedStats() {

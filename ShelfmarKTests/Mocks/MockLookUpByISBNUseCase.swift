@@ -2,11 +2,13 @@
 //  MockLookUpByISBNUseCase.swift
 //  ShelfmarKTests
 //
+//  Purpose: Shelfmark component `MockLookUpByISBNUseCase`.
+//
 
 import Foundation
 @testable import Shelfmark
 
-/// Mock del use case de lookup por ISBN para tests del BookScannerViewModel.
+/// Mock lookup-by-ISBN use case for `BookScannerViewModel` tests.
 final class MockLookUpByISBNUseCase: LookUpByISBNUseCaseProtocol {
     var resultToReturn: Book?
     var errorToThrow: Error?

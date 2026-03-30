@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 05/03/26.
 //
+//  Purpose: Library presentation models and enums used by view and view model layers.
+//
 
 import Foundation
 
+/// Defines Library-specific UI models for filters, sections, and sorting/grouping options.
 enum SortOption: Hashable, CaseIterable {
     case title
     case author
@@ -48,7 +51,7 @@ enum FilterOption: Hashable {
     var displayName: String {
         switch self {
         case .none:
-            "" // No se muestra como botón
+            "" // Not displayed as an actionable button
         case .read:
             "Leídos"
         case .reading:

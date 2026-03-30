@@ -4,12 +4,11 @@
 //
 //  Created by Fernando Buenrostro on 06/03/26.
 //
+//  Purpose: Google Books API transport DTOs used by remote lookup decoding.
+//
 
 import Foundation
-/*
- Aquí se hace el decode
- */
-
+/// Defines decodable response shapes consumed by remote book mapping logic.
 struct RemoteResponseDTO: Decodable {
     let items: [VolumeDTO]?
 }
@@ -43,7 +42,7 @@ struct VolumeInfoDTO: Decodable {
 }
 
 struct ImageLinksDTO: Decodable {
-    /// Google Books suele devolver `smallThumbnail` y `thumbnail`. A veces solo uno de los dos.
+    /// Google Books usually returns both `smallThumbnail` and `thumbnail`, but sometimes only one.
     let smallThumbnail: String?
     let thumbnail: String?
 }

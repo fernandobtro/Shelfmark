@@ -4,11 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Quotes-by-book grid/list cell with cover, title, and quote count badge.
+//
 
 import SwiftUI
 import Kingfisher
 
-/// Celda de libro para la vista "Por libro" en Citas: portada, título, autor y badge con número de citas.
+/// Renders one grouped book item in the Quotes By Book representation.
 struct QuotesBookCellView: View {
     let book: Book
     let quoteCount: Int
@@ -20,10 +22,10 @@ struct QuotesBookCellView: View {
     }
 
     var body: some View {
-        VStack(alignment: .center, spacing: 8) {
+        VStack(alignment: .center, spacing: 10) {
             ZStack(alignment: .topTrailing) {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemGray6))
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.theme.secondaryBackground.opacity(0.72))
 
                 if let url = book.thumbnailURL {
                     KFImage(url)
@@ -32,7 +34,7 @@ struct QuotesBookCellView: View {
                         .cancelOnDisappear(true)
                         .resizable()
                         .scaledToFill()
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 } else {
                     Image(systemName: "book.closed")
                         .font(.largeTitle)
@@ -48,7 +50,11 @@ struct QuotesBookCellView: View {
                     .padding(8)
             }
             .aspectRatio(2/3, contentMode: .fit)
-            .shadow(color: .black.opacity(0.12), radius: 6, x: 0, y: 3)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.14), radius: 8, x: 0, y: 4)
 
             VStack(spacing: 4) {
                 Text(book.title)
@@ -66,6 +72,11 @@ struct QuotesBookCellView: View {
             }
             .frame(maxWidth: .infinity, alignment: .top)
         }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.theme.secondaryBackground.opacity(0.4))
+        )
         .frame(maxWidth: .infinity, alignment: .top)
     }
 }

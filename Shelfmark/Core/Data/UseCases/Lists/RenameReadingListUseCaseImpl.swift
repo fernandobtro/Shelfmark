@@ -2,9 +2,12 @@
 //  RenameReadingListUseCaseImpl.swift
 //  Shelfmark
 //
+//  Purpose: Implements `RenameReadingListUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `RenameReadingListUseCase` using data repositories.
 final class RenameReadingListUseCaseImpl: RenameReadingListUseCaseProtocol {
     private let repository: ReadingListRepositoryProtocol
 

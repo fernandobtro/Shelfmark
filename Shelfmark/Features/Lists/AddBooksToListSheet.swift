@@ -4,9 +4,12 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Sheet that lists candidate books and adds selected entries into a reading list.
+//
 
 import SwiftUI
 
+/// Supports add-to-list flow by presenting selectable library books.
 struct AddBooksToListSheet: View {
     let fetchLibraryUseCase: FetchLibraryUseCaseProtocol
     let bookIdsAlreadyInList: Set<UUID>
@@ -23,7 +26,7 @@ struct AddBooksToListSheet: View {
     @State private var searchText: String = ""
     @State private var addTrigger = 0
     @State private var bookIdToAdd: UUID?
-    /// Libros añadidos durante esta sesión del sheet (feedback visual).
+    @State private var retryTrigger = 0
     @State private var addedThisSession: Set<UUID> = []
 
     private var booksToShow: [Book] {
@@ -66,7 +69,7 @@ struct AddBooksToListSheet: View {
                                     addTrigger += 1
                                 } label: {
                                     HStack {
-                                        LibraryCellView(book: book)
+                                        addBookRow(book: book)
                                             .opacity(isSelected ? 0.6 : 1.0)
 
                                         if isSelected {
@@ -77,10 +80,14 @@ struct AddBooksToListSheet: View {
                                     }
                                 }
                                 .disabled(isSelected)
+                                .buttonStyle(.plain)
                                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
                             }
                         }
                         .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
                         .scrollDismissesKeyboard(.interactively)
                         .task(id: addTrigger) {
                             if addTrigger > 0, let id = bookIdToAdd {
@@ -94,11 +101,17 @@ struct AddBooksToListSheet: View {
                     }
 
                 case .error(let message):
-                    ContentUnavailableView(
-                        "Error",
-                        systemImage: "exclamationmark.triangle",
-                        description: Text(message)
-                    )
+                    VStack(spacing: 12) {
+                        ContentUnavailableView(
+                            "Error",
+                            systemImage: "exclamationmark.triangle",
+                            description: Text(message)
+                        )
+                        Button("Reintentar") {
+                            retryTrigger += 1
+                        }
+                        .buttonStyle(.bordered)
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
@@ -114,7 +127,7 @@ struct AddBooksToListSheet: View {
                     .animation(.default, value: addedThisSession.count)
                 }
             }
-            .task {
+            .task(id: retryTrigger) {
                 await loadLibrary()
             }
         }
@@ -129,7 +142,7 @@ struct AddBooksToListSheet: View {
             }
         } catch {
             await MainActor.run {
-                sheetState = .error(error.localizedDescription)
+                sheetState = .error(UserFacingError.message(error, fallback: "No se pudieron cargar los libros. Intenta de nuevo."))
             }
         }
     }
@@ -137,6 +150,58 @@ struct AddBooksToListSheet: View {
     private var readyButtonTitle: String {
         guard !addedThisSession.isEmpty else { return "Listo" }
         return "Listo (\(addedThisSession.count))"
+    }
+
+    @ViewBuilder
+    private func addBookRow(book: Book) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.theme.secondaryBackground.opacity(0.85))
+
+                if let url = book.thumbnailURL {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        Color.clear
+                    }
+                } else {
+                    Image(systemName: "book.closed")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 40, height: 56)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(book.title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(2)
+                    .foregroundStyle(Color.theme.textPrimary)
+
+                let authors = book.authors.map(\.name).joined(separator: ", ")
+                if !authors.isEmpty {
+                    Text(authors)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.theme.secondaryBackground.opacity(0.72))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 }
 

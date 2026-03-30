@@ -29,3 +29,7 @@ Secrets.xcconfig
 
 # Local docs (not versioned)
 docs/
+
+# Local automation scripts (not versioned)
+scripts/
+

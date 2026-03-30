@@ -2,10 +2,13 @@
 //  QuoteDetailViewModelTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `QuoteDetailViewModelTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `QuoteDetailViewModelTests`.
 @MainActor
 final class QuoteDetailViewModelTests: XCTestCase {
 

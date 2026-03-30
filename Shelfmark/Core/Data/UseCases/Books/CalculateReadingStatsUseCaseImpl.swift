@@ -2,9 +2,12 @@
 //  CalculateReadingStatsUseCaseImpl.swift
 //  Shelfmark
 //
+//  Purpose: Implements `CalculateReadingStatsUseCase` using data repositories.
+//
 
 import Foundation
 
+/// Implements `CalculateReadingStatsUseCase` using data repositories.
 final class CalculateReadingStatsUseCaseImpl: CalculateReadingStatsUseCaseProtocol {
     static let shared = CalculateReadingStatsUseCaseImpl()
 

@@ -2,18 +2,21 @@
 //  LookUpByISBNUseCaseImplTests.swift
 //  ShelfmarKTests
 //
-//  Un test de ejemplo por categoría + comentarios con los que faltan y qué validar.
+//  Example test per category with guidance comments for additional coverage.
+//
+//  Purpose: Unit tests for `LookUpByISBNUseCaseImplTests`.
 //
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `LookUpByISBNUseCaseImplTests`.
 @MainActor
 final class LookUpByISBNUseCaseImplTests: XCTestCase {
 
-    // MARK: - Ejemplo implementado
+    // MARK: - Implemented Example
 
-    /// Cuando el repositorio devuelve un libro, el use case lo devuelve y llama al repo con el ISBN ya recortado.
+    /// When the repository returns a book, the use case returns it and calls the repository with a trimmed ISBN.
     func test_execute_trimmaElISBN_yDevuelveElLibroDelRepositorio() async throws {
         let mockRepo = MockBookLookUpByISBNRepository()
         let book = Book(
@@ -43,9 +46,9 @@ final class LookUpByISBNUseCaseImplTests: XCTestCase {
         XCTAssertEqual(mockRepo.lastISBNReceived, "978-0123456789")
     }
 
-    // MARK: - Más casos
+    // MARK: - Additional Cases
 
-    /// Cuando el repositorio devuelve nil, el use case también devuelve nil y llama una sola vez al repo.
+    /// When the repository returns `nil`, the use case also returns `nil` and calls the repository once.
     func test_execute_cuandoRepositorioDevuelveNil_useCaseDevuelveNil() async throws {
         let mockRepo = MockBookLookUpByISBNRepository()
         mockRepo.resultToReturn = nil
@@ -59,7 +62,7 @@ final class LookUpByISBNUseCaseImplTests: XCTestCase {
         XCTAssertEqual(mockRepo.lastISBNReceived, "123")
     }
 
-    /// Cuando el repositorio lanza error, el use case lo propaga.
+    /// When the repository throws, the use case propagates the same error.
     func test_execute_cuandoRepositorioLanzaError_useCasePropagaElError() async {
         enum DummyError: Error, Equatable {
             case failure
@@ -72,11 +75,11 @@ final class LookUpByISBNUseCaseImplTests: XCTestCase {
 
         do {
             _ = try await sut.execute(isbn: "123")
-            XCTFail("Se esperaba que el use case lanzara error")
+            XCTFail("Expected use case to throw an error")
         } catch let error as DummyError {
             XCTAssertEqual(error, .failure)
         } catch {
-            XCTFail("Se lanzó un tipo de error inesperado: \(error)")
+            XCTFail("Unexpected error type thrown: \(error)")
         }
 
         XCTAssertEqual(mockRepo.fetchCallCount, 1)

@@ -4,11 +4,14 @@
 //
 //  Created by Fernando Buenrostro on 04/03/26.
 //
+//  Purpose: Library tab screen with loading/error states, search, sorting entry points, and paginated grid rendering.
+//
 
 import SwiftUI
 import Foundation
 import Observation
 
+/// Renders the library state machine and routes user actions to `LibraryViewModel`.
 struct LibraryView: View {
     @Bindable var viewModel: LibraryViewModel
     var onStatsTap: () -> Void = {}
@@ -55,6 +58,8 @@ struct LibraryView: View {
                     Image(systemName: "chart.bar.xaxis")
                 }
                 .accessibilityIdentifier("library.statsButton")
+                .padding(8)
+                .background(Circle().fill(Color.theme.secondaryBackground.opacity(0.7)))
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
@@ -62,6 +67,8 @@ struct LibraryView: View {
                 } label: {
                     Image(systemName: "arrow.up.arrow.down")
                 }
+                .padding(8)
+                .background(Circle().fill(Color.theme.secondaryBackground.opacity(0.7)))
             }
         }
         .sheet(isPresented: $viewModel.isShowingSortMenu) {
@@ -78,14 +85,20 @@ struct LibraryView: View {
     private var librarySearchBar: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.theme.textPrimary.opacity(0.5))
             TextField("Buscar por título o autor", text: $viewModel.searchText)
                 .textFieldStyle(.plain)
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 12)
-        .background(.bar)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.theme.secondaryBackground.opacity(0.75))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 
     @ViewBuilder
@@ -97,23 +110,16 @@ struct LibraryView: View {
             let hasActiveFilter = viewModel.filterOption != .none
             let isFiltering = hasActiveSearch || hasActiveFilter
 
-            VStack(spacing: 16) {
-                Image(systemName: isFiltering ? "magnifyingglass" : "book.closed")
-                    .font(.largeTitle)
-                    .foregroundStyle(.secondary)
-
-                Text(isFiltering ? "Sin resultados" : "Sin libros")
-                    .font(.headline)
-
-                Text(
-                    isFiltering
-                    ? "Prueba con otra búsqueda o limpia los filtros."
-                    : "Añade tu primer libro desde el escáner o el formulario."
+            VStack(spacing: 12) {
+                ContentUnavailableView(
+                    isFiltering ? "Sin resultados" : "Sin libros",
+                    systemImage: isFiltering ? "magnifyingglass" : "book.closed",
+                    description: Text(
+                        isFiltering
+                        ? "Prueba con otra búsqueda o limpia los filtros."
+                        : "Añade tu primer libro desde el escáner o el formulario."
+                    )
                 )
-                    .font(.subheadline)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
-
                 if isFiltering {
                     Button("Limpiar búsqueda y filtros") {
                         viewModel.searchText = ""
@@ -132,7 +138,8 @@ struct LibraryView: View {
                 },
                 hasMore: viewModel.hasMore,
                 isLoadingNextPage: viewModel.isLoadingNextPage,
-                onLoadMore: { await viewModel.loadNextPage() }
+                onLoadMore: { await viewModel.loadNextPage() },
+                minimumColumnWidth: viewModel.libraryGridLayoutOption.minimumColumnWidth
             )
             .task(id: deleteTrigger) {
                 if deleteTrigger > 0, let id = pendingDeleteBookId {
@@ -144,21 +151,18 @@ struct LibraryView: View {
     }
 
     private func errorView(message: String) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-
-            Text(message)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-
+        VStack(spacing: 12) {
+            ContentUnavailableView(
+                "Error",
+                systemImage: "exclamationmark.triangle",
+                description: Text(message)
+            )
             Button("Reintentar") {
                 retryTrigger += 1
             }
+            .buttonStyle(.bordered)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
     }
 }
 
@@ -167,7 +171,11 @@ struct LibraryView: View {
 #Preview("Con libros") {
     let mockFetch = PreviewLibraryFetchUseCase()
     let mockDelete = PreviewLibraryDeleteUseCase()
-    let vm = LibraryViewModel(fetchLibraryUseCase: mockFetch, deleteBookUseCase: mockDelete)
+    let vm = LibraryViewModel(
+        fetchLibraryUseCase: mockFetch,
+        deleteBookUseCase: mockDelete,
+        userProfileRepository: UserDefaultsUserProfileRepository()
+    )
     return NavigationStack {
         LibraryView(viewModel: vm)
             .task { await vm.loadLibrary() }
@@ -177,7 +185,11 @@ struct LibraryView: View {
 #Preview("Sin libros") {
     let mockFetch = PreviewLibraryFetchUseCase(books: [])
     let mockDelete = PreviewLibraryDeleteUseCase()
-    let vm = LibraryViewModel(fetchLibraryUseCase: mockFetch, deleteBookUseCase: mockDelete)
+    let vm = LibraryViewModel(
+        fetchLibraryUseCase: mockFetch,
+        deleteBookUseCase: mockDelete,
+        userProfileRepository: UserDefaultsUserProfileRepository()
+    )
     return NavigationStack {
         LibraryView(viewModel: vm)
             .task { await vm.loadLibrary() }

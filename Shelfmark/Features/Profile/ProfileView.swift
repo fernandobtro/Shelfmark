@@ -4,72 +4,141 @@
 //
 //  Created by Fernando Buenrostro on 14/03/26.
 //
+//  Purpose: Profile tab screen for display-name preferences and account-level reading counters.
+//
 
 import SwiftUI
 
+/// Shows profile preferences and summary metrics sourced from `ProfileViewModel`.
 struct ProfileView: View {
     @Bindable var viewModel: ProfileViewModel
+    @State private var retryTrigger = 0
 
     var body: some View {
-        List {
-            nameSection
-            statsSection
-            settingsSection
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                nameSection
+                statsSection
+                settingsSection
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
         .scrollDismissesKeyboard(.interactively)
         .dismissKeyboardOnTapOutside()
         .background(Color.theme.mainBackground)
         .navigationTitle("Perfil")
-        .task { await viewModel.load() }
+        .task(id: retryTrigger) {
+            await viewModel.load()
+        }
         .onDisappear { viewModel.saveDisplayName(viewModel.displayName) }
     }
 
     private var nameSection: some View {
-        Section {
-            TextField("Cómo te llamas?", text: $viewModel.displayName)
-                .textContentType(.name)
-                .autocorrectionDisabled()
-                .onSubmit { viewModel.saveDisplayName(viewModel.displayName) }
-        } header: {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Tu nombre")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            card {
+                TextField("¿Cómo te llamas?", text: $viewModel.displayName)
+                    .textContentType(.name)
+                    .autocorrectionDisabled()
+                    .onSubmit { viewModel.saveDisplayName(viewModel.displayName) }
+                    .onChange(of: viewModel.displayName) { _, newValue in
+                        viewModel.saveDisplayName(newValue)
+                    }
+            }
         }
     }
 
     @ViewBuilder
     private var statsSection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Estadísticas")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
             switch viewModel.state {
             case .idle, .loading:
-                HStack {
-                    Spacer()
-                    ProgressView()
-                    Spacer()
+                card {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
                 }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
 
             case .loaded(let booksCount, let quotesCount, let listsCount):
-                StatRow(title: "Libros en biblioteca", value: booksCount)
-                StatRow(title: "Citas guardadas", value: quotesCount)
-                StatRow(title: "Listas creadas", value: listsCount)
+                card {
+                    VStack(spacing: 10) {
+                        StatRow(title: "Libros en biblioteca", value: booksCount)
+                        Divider()
+                        StatRow(title: "Citas guardadas", value: quotesCount)
+                        Divider()
+                        StatRow(title: "Listas creadas", value: listsCount)
+                    }
+                }
 
             case .error(let message):
-                Text(message)
-                    .foregroundStyle(.secondary)
+                card {
+                    VStack(spacing: 12) {
+                        ContentUnavailableView(
+                            "Error",
+                            systemImage: "exclamationmark.triangle",
+                            description: Text(message)
+                        )
+                        Button("Reintentar") {
+                            retryTrigger += 1
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                .frame(maxWidth: .infinity)
             }
-        } header: {
-            Text("Estadísticas")
         }
     }
 
     private var settingsSection: some View {
-        Section {
-            Label("Ajustes", systemImage: "gearshape")
-                .foregroundStyle(.secondary)
-            // Placeholder: en el futuro enlace a tema, notificaciones, etc.
-        } header: {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Configuración")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            card {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Label("Tamaño de grid en Biblioteca", systemImage: "square.grid.2x2")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    Picker(
+                        "Tamaño de grid",
+                        selection: Binding(
+                            get: { viewModel.libraryGridLayoutOption },
+                            set: { viewModel.setLibraryGridLayoutOption($0) }
+                        )
+                    ) {
+                        ForEach(LibraryGridLayoutOption.allCases) { option in
+                            Text(option.displayName).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+            }
         }
+    }
+
+    @ViewBuilder
+    private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.theme.secondaryBackground.opacity(0.72))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+            )
     }
 }
 
@@ -114,11 +183,15 @@ private struct StatRow: View {
 private struct PreviewUserProfileRepository: UserProfileRepositoryProtocol {
     func getDisplayName() -> String { "" }
     func setDisplayName(_ name: String) {}
+    func getLibraryGridLayoutOption() -> LibraryGridLayoutOption { .standard }
+    func setLibraryGridLayoutOption(_ option: LibraryGridLayoutOption) {}
 }
 
 private struct PreviewUserProfileRepositoryWithName: UserProfileRepositoryProtocol {
     func getDisplayName() -> String { "Fernando" }
     func setDisplayName(_ name: String) {}
+    func getLibraryGridLayoutOption() -> LibraryGridLayoutOption { .standard }
+    func setLibraryGridLayoutOption(_ option: LibraryGridLayoutOption) {}
 }
 
 private struct PreviewFetchLibraryForProfile: FetchLibraryUseCaseProtocol {

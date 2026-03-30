@@ -2,10 +2,13 @@
 //  FetchQuotesUseCaseImplTests.swift
 //  ShelfmarKTests
 //
+//  Purpose: Unit tests for `FetchQuotesUseCaseImplTests`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Unit tests for `FetchQuotesUseCaseImplTests`.
 @MainActor
 final class FetchQuotesUseCaseImplTests: XCTestCase {
 

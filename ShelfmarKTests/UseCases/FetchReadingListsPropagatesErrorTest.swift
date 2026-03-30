@@ -4,10 +4,13 @@
 //
 //  Created by Fernando Buenrostro on 13/03/26.
 //
+//  Purpose: Shelfmark component `FetchReadingListsPropagatesErrorTest`.
+//
 
 import XCTest
 @testable import Shelfmark
 
+/// Shelfmark component `FetchReadingListsPropagatesErrorTest`.
 @MainActor
 final class FetchReadingListsPropagatesErrorTest: XCTestCase {
     func testFetchReadingListsPropagatesError() async {
